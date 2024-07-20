@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt, QMimeData
 
 class SlideImage(QLabel):
 
-    def __init__(self, parent, image, allow_drag=True, default_width=340):
+    def __init__(self, parent, image, allow_drag=True, default_width=300):
         super(SlideImage, self).__init__()
         self.parent = parent
 

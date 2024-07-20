@@ -55,7 +55,7 @@ class PopupWindow(QDialog):
             self.image_box.addLayout(slide)
 
         if self.added_images:
-            self.setFixedHeight(slide.itemAt(0).geometry().height() + 125)
+            self.setFixedHeight(slide.itemAt(0).geometry().height() + 180)
             self.setFixedWidth(2 * slide.itemAt(0).geometry().width() + 100)
 
         widget.setLayout(self.image_box)

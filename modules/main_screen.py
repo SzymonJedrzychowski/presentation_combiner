@@ -44,6 +44,7 @@ class MainScreen(QMainWindow):
         self.image_list = []
 
         self.selected_image = None
+        self.max_width = self.screen().geometry().width()-450
 
         self.scroll_timer = QTimer(self)
         self.scroll_direction = 0
@@ -65,8 +66,6 @@ class MainScreen(QMainWindow):
 
         self.main_layout.addLayout(self.slides_area, 0, 0, 1, 1)
         self.main_layout.addLayout(self.view_area, 0, 1, 1, 1)
-        self.main_layout.setColumnStretch(0, 3)
-        self.main_layout.setColumnStretch(1, 7)
 
         self.main_widget.setLayout(self.main_layout)
         self.setCentralWidget(self.main_widget)
@@ -192,7 +191,7 @@ class MainScreen(QMainWindow):
 
         self.selected_image = self.image_list.index(newly_selected.image)
 
-        pixmap = QPixmap(newly_selected.image).scaledToWidth(self.screen().geometry().width() - 500)
+        pixmap = QPixmap(newly_selected.image).scaledToWidth(self.max_width)
         self.selected_slide.setPixmap(pixmap)
 
     def create_view_area(self):
@@ -203,11 +202,12 @@ class MainScreen(QMainWindow):
         else:
             image = self.default_image
 
-        pixmap = image.scaledToWidth(self.screen().geometry().width() - 500)
+        pixmap = image.scaledToWidth(self.max_width)
 
         self.selected_slide = QLabel()
         self.selected_slide.setPixmap(pixmap)
         view_area.addWidget(self.selected_slide)
+        view_area.setAlignment(self.selected_slide, Qt.AlignHCenter)
 
         return view_area
 
@@ -304,7 +304,7 @@ class MainScreen(QMainWindow):
                 slide.itemAt(1).widget().apply_border()
 
                 selected_image = QPixmap(self.image_list[0])
-                pixmap = selected_image.scaledToWidth(self.screen().geometry().width() - 500)
+                pixmap = selected_image.scaledToWidth(self.max_width)
 
                 self.selected_slide.setPixmap(pixmap)
             self.image_box.addLayout(slide)
@@ -332,7 +332,7 @@ class MainScreen(QMainWindow):
                 self.selected_image = None
                 new_image = self.default_image
 
-            pixmap = QPixmap(new_image).scaledToWidth(self.screen().geometry().width() - 500)
+            pixmap = QPixmap(new_image).scaledToWidth(self.max_width)
             self.selected_slide.setPixmap(pixmap)
 
             for image_index in range(self.image_box.count()):
@@ -343,7 +343,7 @@ class MainScreen(QMainWindow):
     def reset_slides(self):
         self.selected_image = None
 
-        pixmap = self.default_image.scaledToWidth(self.screen().geometry().width() - 500)
+        pixmap = self.default_image.scaledToWidth(self.max_width)
         self.selected_slide.setPixmap(pixmap)
 
         for image_index in reversed(range(self.image_box.count())):
