@@ -25,22 +25,22 @@ class PopupWindow(QDialog):
         self.function_button = QPushButton()
         cancel_button = QPushButton()
 
+        self.function_button.setText('Zaznacz wszystkie slajdy')
+        self.function_button.setFont(font)
+        self.function_button.clicked.connect(self.process_all_images)
+
         finish_button.setText('Dodaj wybrane slajdy')
         finish_button.setFont(font)
         finish_button.clicked.connect(self.load_images)
-
-        self.function_button.setText('Dodaj wszystkie slajdy')
-        self.function_button.setFont(font)
-        self.function_button.clicked.connect(self.process_all_images)
 
         cancel_button.setText('Nie dodawaj slajdów')
         cancel_button.setFont(font)
         cancel_button.clicked.connect(self.close)
 
-        self.main_layout.addWidget(self.create_scrollable_area(), 0, 0, 1, 3)
-        self.main_layout.addWidget(finish_button, 1, 0, 1, 1)
-        self.main_layout.addWidget(self.function_button, 1, 1, 1, 1)
-        self.main_layout.addWidget(cancel_button, 1, 2, 1, 1)
+        self.main_layout.addWidget(self.create_scrollable_area(), 0, 0, 1, 2)
+        self.main_layout.addWidget(self.function_button, 1, 0, 1, 2)
+        self.main_layout.addWidget(finish_button, 2, 0, 1, 1)
+        self.main_layout.addWidget(cancel_button, 2, 1, 1, 1)
 
         self.setLayout(self.main_layout)
 
@@ -95,9 +95,9 @@ class PopupWindow(QDialog):
                 self.selected_images.append(self.added_images[image_index])
 
         if self.image_box.count() == len(self.selected_images):
-            self.function_button.setText('Usuń wszystkie slajdy')
+            self.function_button.setText('Zaznacz wszystkie slajdy')
         else:
-            self.function_button.setText('Dodaj wszystkie slajdy')
+            self.function_button.setText('Odznacz wszystkie slajdy')
 
     def process_all_images(self):
         new_value = self.image_box.count() == len(self.selected_images)
