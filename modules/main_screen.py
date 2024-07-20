@@ -416,3 +416,7 @@ class MainScreen(QMainWindow):
         self.scroll_direction = 0
 
         event.accept()
+
+    def closeEvent(self, event):
+        for image_file in listdir('temp'):
+            remove('temp/{}'.format(image_file))
