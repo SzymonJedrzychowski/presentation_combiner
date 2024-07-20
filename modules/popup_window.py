@@ -95,9 +95,9 @@ class PopupWindow(QDialog):
                 self.selected_images.append(self.added_images[image_index])
 
         if self.image_box.count() == len(self.selected_images):
-            self.function_button.setText('Zaznacz wszystkie slajdy')
-        else:
             self.function_button.setText('Odznacz wszystkie slajdy')
+        else:
+            self.function_button.setText('Zaznacz wszystkie slajdy')
 
     def process_all_images(self):
         new_value = self.image_box.count() == len(self.selected_images)
