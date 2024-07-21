@@ -21,7 +21,7 @@ class PopupWindow(QDialog):
 
         self.main_layout = QGridLayout()
 
-        finish_button = QPushButton()
+        self.finish_button = QPushButton()
         self.function_button = QPushButton()
         cancel_button = QPushButton()
 
@@ -29,9 +29,10 @@ class PopupWindow(QDialog):
         self.function_button.setFont(font)
         self.function_button.clicked.connect(self.process_all_images)
 
-        finish_button.setText('Dodaj wybrane slajdy')
-        finish_button.setFont(font)
-        finish_button.clicked.connect(self.load_images)
+        self.finish_button.setText('Dodaj wybrane slajdy')
+        self.finish_button.setFont(font)
+        self.finish_button.clicked.connect(self.load_images)
+        self.finish_button.setDisabled(True)
 
         cancel_button.setText('Nie dodawaj slajdów')
         cancel_button.setFont(font)
@@ -39,7 +40,7 @@ class PopupWindow(QDialog):
 
         self.main_layout.addWidget(self.create_scrollable_area(), 0, 0, 1, 2)
         self.main_layout.addWidget(self.function_button, 1, 0, 1, 2)
-        self.main_layout.addWidget(finish_button, 2, 0, 1, 1)
+        self.main_layout.addWidget(self.finish_button, 2, 0, 1, 1)
         self.main_layout.addWidget(cancel_button, 2, 1, 1, 1)
 
         self.setLayout(self.main_layout)
@@ -98,6 +99,8 @@ class PopupWindow(QDialog):
             self.function_button.setText('Odznacz wszystkie slajdy')
         else:
             self.function_button.setText('Zaznacz wszystkie slajdy')
+
+        self.finish_button.setDisabled(len(self.selected_images) == 0)
 
     def process_all_images(self):
         new_value = self.image_box.count() == len(self.selected_images)

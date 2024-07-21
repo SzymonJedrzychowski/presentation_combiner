@@ -229,16 +229,19 @@ class MainScreen(QMainWindow):
 
         self.remove_button.setText('Usuń slajd')
         self.remove_button.setFont(font)
+        self.remove_button.setDisabled(True)
 
         self.remove_button.clicked.connect(self.remove_current_slide)
 
         self.reset_button.setText("Usuń wszystkie")
         self.reset_button.setFont(font)
+        self.reset_button.setDisabled(True)
 
         self.reset_button.clicked.connect(self.reset_slides)
 
         self.save_button.setText('Zapisz plik')
         self.save_button.setFont(font)
+        self.save_button.setDisabled(True)
 
         self.save_button.clicked.connect(self.save_file)
 
@@ -309,6 +312,11 @@ class MainScreen(QMainWindow):
                 self.selected_slide.setPixmap(pixmap)
             self.image_box.addLayout(slide)
 
+        if self.image_list:
+            self.reset_button.setDisabled(False)
+            self.remove_button.setDisabled(False)
+            self.save_button.setDisabled(False)
+
     def remove_current_slide(self):
         if self.selected_image is not None:
             layout = self.image_box.itemAt(self.selected_image).layout()
@@ -338,6 +346,11 @@ class MainScreen(QMainWindow):
             for image_index in range(self.image_box.count()):
                 self.image_box.itemAt(image_index).layout().itemAt(0).widget().setText(str(image_index + 1))
 
+        if not self.image_list:
+            self.reset_button.setDisabled(True)
+            self.remove_button.setDisabled(True)
+            self.save_button.setDisabled(True)
+
         self.update()
 
     def reset_slides(self):
@@ -352,6 +365,10 @@ class MainScreen(QMainWindow):
             layout.takeAt(0).widget().deleteLater()
             self.image_box.takeAt(image_index)
             self.image_list.pop(image_index)
+
+        self.reset_button.setDisabled(True)
+        self.remove_button.setDisabled(True)
+        self.save_button.setDisabled(True)
 
     def save_file(self):
         if not self.image_list:
