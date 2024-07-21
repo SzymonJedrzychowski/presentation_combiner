@@ -12,10 +12,14 @@ class PopupWindow(QDialog):
         super().__init__(parent)
         self.setWindowTitle(file)
         self.setWindowFlag(Qt.WindowContextHelpButtonHint, False)
+
         self.added_images = added_images
         self.selected_images = []
         self.keep_images = False
 
+        self.setup_layout()
+
+    def setup_layout(self):
         font = self.font()
         font.setPointSize(14)
 

@@ -1,16 +1,16 @@
-import ctypes
+from ctypes import windll
 from os import listdir, remove, path, makedirs
 from time import time
 
 from PIL import Image, ImageDraw, ImageFont
 from PyQt5.QtCore import QTimer, Qt
+from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QMainWindow, QGridLayout, QWidget, QScrollArea, QVBoxLayout, QHBoxLayout, QLabel, \
     QPushButton, QFileDialog, QDialog
-from PyQt5.QtGui import QPixmap, QIcon
+from pdf2image import convert_from_path
 
 from .popup_window import PopupWindow
 from .slide_image import SlideImage
-from pdf2image import convert_from_path
 
 
 class MainScreen(QMainWindow):
@@ -19,43 +19,20 @@ class MainScreen(QMainWindow):
         super(MainScreen, self).__init__()
         self.setWindowTitle('Kombinator prezentacji')
 
-        if path.exists('data/logo.png'):
-            # https://www.flaticon.com/free-icons/squirrel - Squirrel icons created by Freepik - Flaticon
-            self.icon = QIcon('data/logo.png')
-        else:
-            self.icon = None
-
-        if not path.exists('data/temporary_image.jpg'):
-            self.create_default_image()
-
-        self.default_image = QPixmap('data/temporary_image.jpg')
-
-        self.set_icon(self)
-
-        if not path.exists('temp'):
-            makedirs('temp')
-            ctypes.windll.kernel32.SetFileAttributesW('temp', 0x02)
-
-        directory_content = listdir('temp')
-        if directory_content:
-            for file in directory_content:
-                remove('temp/{}'.format(file))
+        self.organize_and_load_structures()
 
         self.image_list = []
-
         self.selected_image = None
-        self.max_width = self.screen().geometry().width()-450
-
-        self.scroll_timer = QTimer(self)
+        self.max_width = self.screen().geometry().width() - 450
         self.scroll_direction = 0
-
-        self.scroll_timer.timeout.connect(self.update_scroll_value)
-        self.scroll_timer.setInterval(1000 // 60)
-        self.setAcceptDrops(True)
-
         self.drag_start_time = 0
 
+        self.scroll_timer = self.create_timer()
+
+        self.setAcceptDrops(True)
+
         self.setup_layout()
+        self.set_icon(self)
 
     def setup_layout(self):
         self.main_layout = QGridLayout()
@@ -403,6 +380,33 @@ class MainScreen(QMainWindow):
         draw.text((100, 100), text, (0, 0, 0), font=font)
 
         image.save('data/temporary_image.jpg')
+
+    def create_timer(self):
+        timer = QTimer(self)
+        timer.timeout.connect(self.update_scroll_value)
+        timer.setInterval(1000 // 60)
+        return timer
+
+    def organize_and_load_structures(self):
+        if path.exists('data/logo.png'):
+            # https://www.flaticon.com/free-icons/squirrel - Squirrel icons created by Freepik - Flaticon
+            self.icon = QIcon('data/logo.png')
+        else:
+            self.icon = None
+
+        if not path.exists('data/temporary_image.jpg'):
+            self.create_default_image()
+
+        self.default_image = QPixmap('data/temporary_image.jpg')
+
+        if not path.exists('temp'):
+            makedirs('temp')
+            windll.kernel32.SetFileAttributesW('temp', 0x02)
+
+        directory_content = listdir('temp')
+        if directory_content:
+            for file in directory_content:
+                remove('temp/{}'.format(file))
 
     def dragEnterEvent(self, event):
         self.drag_start_time = time()

@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QLabel
-from PyQt5.QtGui import QDrag, QPixmap
 from PyQt5.QtCore import Qt, QMimeData
+from PyQt5.QtGui import QDrag, QPixmap
+from PyQt5.QtWidgets import QLabel
 
 
 class SlideImage(QLabel):
