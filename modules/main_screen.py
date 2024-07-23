@@ -2,12 +2,12 @@ from ctypes import windll
 from os import listdir, remove, path, makedirs
 from time import time
 
+import pyvips
 from PIL import Image, ImageDraw, ImageFont
 from PyQt5.QtCore import QTimer, Qt, QSize
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QMainWindow, QGridLayout, QWidget, QScrollArea, QVBoxLayout, QHBoxLayout, QLabel, \
     QPushButton, QFileDialog, QDialog, QToolTip
-from pdf2image import convert_from_path
 
 from .popup_window import PopupWindow
 from .slide_image import SlideImage
@@ -33,6 +33,8 @@ class MainScreen(QMainWindow):
 
         self.setup_layout()
         self.set_icon(self)
+
+        self.image_counter = 0
 
     def setup_layout(self):
         self.main_layout = QGridLayout()
@@ -244,9 +246,12 @@ class MainScreen(QMainWindow):
         for file in files:
             directory_content = listdir('temp')
 
+            image = pyvips.Image.new_from_file(file)
             try:
-                convert_from_path(file, poppler_path='poppler-24.02.0/Library/bin', output_folder='temp', fmt='png',
-                                  thread_count=2, size=(1280, 720))
+                for i in range(image.get('n-pages')):
+                    image = pyvips.Image.new_from_file(file, page=i)
+                    image.write_to_file(r'temp\slide_{:05d}.jpg'.format(self.image_counter))
+                    self.image_counter += 1
             except:
                 error_dialog = QDialog()
                 error_dialog.setWindowTitle('Wystąpił problem')
