@@ -3,10 +3,10 @@ from os import listdir, remove, path, makedirs
 from time import time
 
 from PIL import Image, ImageDraw, ImageFont
-from PyQt5.QtCore import QTimer, Qt
+from PyQt5.QtCore import QTimer, Qt, QSize
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QMainWindow, QGridLayout, QWidget, QScrollArea, QVBoxLayout, QHBoxLayout, QLabel, \
-    QPushButton, QFileDialog, QDialog
+    QPushButton, QFileDialog, QDialog, QToolTip
 from pdf2image import convert_from_path
 
 from .popup_window import PopupWindow
@@ -189,36 +189,45 @@ class MainScreen(QMainWindow):
         return view_area
 
     def create_buttons_area(self):
-        layout = QGridLayout()
+        layout = QHBoxLayout()
 
         font = self.font()
         font.setPointSize(18)
+        QToolTip.setFont(font)
 
         self.add_button = QPushButton()
         self.remove_button = QPushButton()
         self.save_button = QPushButton()
         self.reset_button = QPushButton()
 
-        self.add_button.setText('Dodaj slajdy')
-        self.add_button.setFont(font)
+        # https://www.flaticon.com/free-icons/add - Add icons created by reussy - Flaticon
+        self.add_button.setIcon(QIcon('data/add.png'))
+        self.add_button.setIconSize(QSize(32, 32))
+        self.add_button.setToolTip("Dodaj slajdy")
 
         self.add_button.clicked.connect(self.load_files)
 
-        self.remove_button.setText('Usuń slajd')
-        self.remove_button.setFont(font)
+        # https://www.flaticon.com/free-icons/less - Less icons created by reussy - Flaticon
+        self.remove_button.setIcon(QIcon('data/remove.png'))
         self.remove_button.setDisabled(True)
+        self.remove_button.setIconSize(QSize(32, 32))
+        self.remove_button.setToolTip("Usuń obecny slajd")
 
         self.remove_button.clicked.connect(self.remove_current_slide)
 
-        self.reset_button.setText("Usuń wszystkie")
-        self.reset_button.setFont(font)
+        # https://www.flaticon.com/free-icons/close - Close icons created by reussy - Flaticon
+        self.reset_button.setIcon(QIcon('data/reset.png'))
         self.reset_button.setDisabled(True)
+        self.reset_button.setIconSize(QSize(32, 32))
+        self.reset_button.setToolTip("Usuń wszystkie slajdy")
 
         self.reset_button.clicked.connect(self.reset_slides)
 
-        self.save_button.setText('Zapisz plik')
-        self.save_button.setFont(font)
+        # https://www.flaticon.com/free-icons/down-arrow - Down arrow icons created by reussy - Flaticon
+        self.save_button.setIcon(QIcon('data/download.png'))
         self.save_button.setDisabled(True)
+        self.save_button.setIconSize(QSize(32, 32))
+        self.save_button.setToolTip("Pobierz pdf")
 
         self.save_button.clicked.connect(self.save_file)
 
@@ -375,7 +384,7 @@ class MainScreen(QMainWindow):
 
         draw = ImageDraw.Draw(image)
         font = ImageFont.truetype('arial.ttf', 52)
-        text = 'Naciśnij "Dodaj slajdy" aby rozpocząć.'
+        text = 'Naciśnij "Dodaj slajdy (+)" aby rozpocząć.'
 
         draw.text((100, 100), text, (0, 0, 0), font=font)
 
