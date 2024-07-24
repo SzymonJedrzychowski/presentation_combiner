@@ -2,15 +2,16 @@ from ctypes import windll
 from os import listdir, remove, path, makedirs
 from time import time
 
-import pyvips
 from PIL import Image, ImageDraw, ImageFont
-from PyQt5.QtCore import QTimer, Qt, QSize
+from PyQt5.QtCore import QTimer, Qt, QSize, QThread
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QMainWindow, QGridLayout, QWidget, QScrollArea, QVBoxLayout, QHBoxLayout, QLabel, \
     QPushButton, QFileDialog, QDialog, QToolTip
 
+from .popup_progress_bar import PopupProgressBar
 from .popup_window import PopupWindow
 from .slide_image import SlideImage
+from .worker import Worker
 
 
 class MainScreen(QMainWindow):
@@ -22,6 +23,7 @@ class MainScreen(QMainWindow):
         self.organize_and_load_structures()
 
         self.image_list = []
+        self.directory_content = []
         self.selected_image = None
         self.max_width = self.screen().geometry().width() - 450
         self.scroll_direction = 0
@@ -31,10 +33,9 @@ class MainScreen(QMainWindow):
 
         self.setAcceptDrops(True)
 
+        self.create_progress_bar()
         self.setup_layout()
         self.set_icon(self)
-
-        self.image_counter = 0
 
     def setup_layout(self):
         self.main_layout = QGridLayout()
@@ -48,6 +49,19 @@ class MainScreen(QMainWindow):
 
         self.main_widget.setLayout(self.main_layout)
         self.setCentralWidget(self.main_widget)
+
+    def create_progress_bar(self):
+        self.popup_progress_bar = PopupProgressBar()
+        self.set_icon(self.popup_progress_bar)
+
+        self.worker = Worker()
+        self.thread = QThread()
+        self.worker.int_ready.connect(self.popup_progress_bar.on_count_changed)
+        self.worker.moveToThread(self.thread)
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self.popup_progress_bar.hide)
+        self.worker.finished.connect(self.on_load_finish)
+        self.thread.started.connect(self.worker.proc_counter)
 
     def create_slides_area(self):
         slides_area = QGridLayout()
@@ -241,51 +255,50 @@ class MainScreen(QMainWindow):
         return layout
 
     def load_files(self):
-        files = QFileDialog.getOpenFileNames(self, 'Wybierz PDF\'y', filter='PDF (*.pdf)')[0]
+        file = QFileDialog.getOpenFileName(self, 'Wybierz PDF', filter='PDF (*.pdf)')[0]
 
-        for file in files:
-            directory_content = listdir('temp')
+        self.directory_content = listdir('temp')
+        try:
+            self.popup_progress_bar.bar.setValue(0)
+            self.add_button.setDisabled(True)
+            self.worker.file = file
+            self.popup_progress_bar.show()
+            self.thread.start()
+        except:
+            error_dialog = QDialog()
+            error_dialog.setWindowTitle('Wystąpił problem')
+            error_dialog.setWindowFlag(Qt.WindowContextHelpButtonHint, False)
+            self.set_icon(error_dialog)
 
-            image = pyvips.Image.new_from_file(file)
-            try:
-                for i in range(image.get('n-pages')):
-                    image = pyvips.Image.new_from_file(file, page=i)
-                    image.write_to_file(r'temp\slide_{:05d}.jpg'.format(self.image_counter))
-                    self.image_counter += 1
-            except:
-                error_dialog = QDialog()
-                error_dialog.setWindowTitle('Wystąpił problem')
-                error_dialog.setWindowFlag(Qt.WindowContextHelpButtonHint, False)
-                self.set_icon(error_dialog)
+            layout = QHBoxLayout()
+            widget = QLabel()
+            widget.setText(
+                'Wystąpił problem w trakcie używania aplikacji.\n'
+                'Aplikacja zostanie wyłączona.\n'
+                'Jeżeli ten problem wystąpi ponownie, skontaktuj się z autorem.')
 
-                layout = QHBoxLayout()
-                widget = QLabel()
-                widget.setText(
-                    'Wystąpił problem w trakcie używania aplikacji.\n'
-                    'Aplikacja zostanie wyłączona.\n'
-                    'Jeżeli ten problem wystąpi ponownie, skontaktuj się z autorem.')
+            font = self.font()
+            font.setPointSize(14)
 
-                font = self.font()
-                font.setPointSize(14)
+            widget.setFont(font)
 
-                widget.setFont(font)
+            error_dialog.setLayout(layout)
+            layout.addWidget(widget)
 
-                error_dialog.setLayout(layout)
-                layout.addWidget(widget)
+            error_dialog.exec()
 
-                error_dialog.exec()
+            self.close()
+            return
 
-                self.close()
-                return
+    def on_load_finish(self):
+        self.add_button.setDisabled(False)
+        added_images = [new_file for new_file in listdir('temp') if new_file not in self.directory_content]
 
-            added_images = [new_file for new_file in listdir('temp') if new_file not in directory_content]
+        popup_window = PopupWindow(self, self.worker.file, added_images)
+        self.set_icon(popup_window)
+        popup_window.exec()
 
-            popup_window = PopupWindow(self, file, added_images)
-            self.set_icon(popup_window)
-            popup_window.exec()
-
-            self.update_slide_list(popup_window.selected_images)
-        self.update()
+        self.update_slide_list(popup_window.selected_images)
 
     def update_slide_list(self, new_images):
         for image in new_images:
