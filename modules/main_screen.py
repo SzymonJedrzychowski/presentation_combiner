@@ -25,7 +25,7 @@ class MainScreen(QMainWindow):
         self.image_list = []
         self.directory_content = []
         self.selected_image = None
-        self.max_width = self.screen().geometry().width() - 450
+        self.max_width = self.screen().availableSize().width() - 450
         self.scroll_direction = 0
         self.drag_start_time = 0
 

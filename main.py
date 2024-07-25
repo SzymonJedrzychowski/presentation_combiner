@@ -12,6 +12,7 @@ def main():
     app = QApplication(sys.argv)
     screen = main_screen.MainScreen()
     screen.showMaximized()
+    screen.setFixedSize(screen.screen().availableSize())
 
     sys.exit(app.exec_())
 
