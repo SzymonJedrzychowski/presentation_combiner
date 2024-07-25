@@ -257,6 +257,9 @@ class MainScreen(QMainWindow):
     def load_files(self):
         file = QFileDialog.getOpenFileName(self, 'Wybierz PDF', filter='PDF (*.pdf)')[0]
 
+        if file == "":
+            return
+
         self.directory_content = listdir('temp')
         try:
             self.popup_progress_bar.bar.setValue(0)
