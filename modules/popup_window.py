@@ -10,6 +10,7 @@ from modules.slide_image import SlideImage
 class PopupWindow(QDialog):
     def __init__(self, parent, file, added_images):
         super().__init__(parent)
+        self.parent = parent
         self.setWindowTitle(file)
         self.setWindowFlag(Qt.WindowContextHelpButtonHint, False)
 
@@ -55,13 +56,18 @@ class PopupWindow(QDialog):
         self.image_box = QHBoxLayout()
         widget = QWidget()
 
+        max_height = 0
+        max_width = 0
         for image_index in range(len(self.added_images)):
             slide = self.create_slide(image_index)
             self.image_box.addLayout(slide)
+            geometry = slide.itemAt(0).widget().pixmap.size()
+            max_height = max(max_height, geometry.height())
+            max_width = max(max_width, geometry.width())
 
         if self.added_images:
-            self.setFixedHeight(slide.itemAt(0).geometry().height() + 180)
-            self.setFixedWidth(2 * slide.itemAt(0).geometry().width() + 100)
+            self.setFixedHeight(min(max_height + 180, self.parent.height()))
+            self.setFixedWidth(min(int(2.5 * max_width), self.parent.width()))
 
         widget.setLayout(self.image_box)
         widget.mouseReleaseEvent = self.update_selected
@@ -84,7 +90,7 @@ class PopupWindow(QDialog):
         page_label.setText(str(image_index + 1))
         page_label.setFont(font)
 
-        slide_image = SlideImage(self, 'temp/{}'.format(self.added_images[image_index]), False, 600)
+        slide_image = SlideImage(self, 'temp/{}'.format(self.added_images[image_index]), False)
         page_label.setFixedHeight(20)
 
         slide.addWidget(slide_image)

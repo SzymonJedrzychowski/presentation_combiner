@@ -5,17 +5,31 @@ from PyQt5.QtWidgets import QLabel
 
 class SlideImage(QLabel):
 
-    def __init__(self, parent, image, allow_drag=True, default_width=300):
+    def __init__(self, parent, image, allow_drag=True):
         super(SlideImage, self).__init__()
         self.parent = parent
 
         self.allow_drag = allow_drag
         self.image = image
 
-        pixmap = QPixmap(self.image).scaledToWidth(default_width)
-        self.setPixmap(pixmap)
-        self.setFixedWidth(pixmap.width())
-        self.setFixedHeight(pixmap.height())
+        self.pixmap = QPixmap(self.image)
+
+        if not allow_drag:
+            # This all can be a settings
+            if 2.5 * self.pixmap.width() > self.screen().availableSize().width():
+                self.pixmap = self.pixmap.scaledToWidth(int(self.screen().availableSize().width() / 2.5))
+
+            if self.pixmap.height() > self.screen().availableSize().height() - 180:
+                self.pixmap = self.pixmap.scaledToHeight(self.screen().availableSize().height() - 180)
+
+            self.setFixedWidth(self.pixmap.width())
+            self.setFixedHeight(self.pixmap.height())
+        else:
+            self.pixmap = self.pixmap.scaledToWidth(300)
+            self.setFixedWidth(self.pixmap.width())
+            self.setFixedHeight(self.pixmap.height())
+
+        self.setPixmap(self.pixmap)
         self.is_selected = False
         self.setStyleSheet("border: 2px solid;"
                            "border-color: black;")

@@ -1,3 +1,4 @@
+import json
 from ctypes import windll
 from os import listdir, remove, path, makedirs
 from time import time
@@ -10,6 +11,7 @@ from PyQt5.QtWidgets import QMainWindow, QGridLayout, QWidget, QScrollArea, QVBo
 
 from .popup_progress_bar import PopupProgressBar
 from .popup_window import PopupWindow
+from .settings_window import SettingsWindow
 from .slide_image import SlideImage
 from .worker import Worker
 
@@ -28,6 +30,7 @@ class MainScreen(QMainWindow):
         self.max_width = self.screen().availableSize().width() - 450
         self.scroll_direction = 0
         self.drag_start_time = 0
+        self.settings = self.load_settings()
 
         self.scroll_timer = self.create_timer()
 
@@ -36,6 +39,15 @@ class MainScreen(QMainWindow):
         self.create_progress_bar()
         self.setup_layout()
         self.set_icon(self)
+
+    def load_settings(self):
+        if path.exists('data/settings.json'):
+            with open('data/settings.json') as f:
+                return json.load(f)
+        else:
+            return {
+                "dpi": 100
+            }
 
     def setup_layout(self):
         self.main_layout = QGridLayout()
@@ -54,7 +66,7 @@ class MainScreen(QMainWindow):
         self.popup_progress_bar = PopupProgressBar()
         self.set_icon(self.popup_progress_bar)
 
-        self.worker = Worker()
+        self.worker = Worker(self.settings)
         self.thread = QThread()
         self.worker.int_ready.connect(self.popup_progress_bar.on_count_changed)
         self.worker.moveToThread(self.thread)
@@ -100,7 +112,7 @@ class MainScreen(QMainWindow):
         page_label.setText(str(image_index + 1))
         page_label.setFont(font)
         slide_image = SlideImage(slide, self.image_list[image_index])
-        page_label.setFixedWidth(20)
+        page_label.setFixedWidth(30)
 
         slide.addWidget(page_label)
         slide.addWidget(slide_image)
@@ -185,6 +197,15 @@ class MainScreen(QMainWindow):
         self.selected_image = self.image_list.index(newly_selected.image)
 
         pixmap = QPixmap(newly_selected.image).scaledToWidth(self.max_width)
+        self.update_selected_slide(pixmap)
+
+    def update_selected_slide(self, pixmap):
+        if pixmap.width() > self.screen().availableSize().width()-450:
+            pixmap = pixmap.scaledToWidth(self.screen().availableSize().width()-450)
+
+        if pixmap.height() > self.screen().availableSize().height():
+            pixmap = pixmap.scaledToHeight(self.screen().availableSize().height())
+
         self.selected_slide.setPixmap(pixmap)
 
     def create_view_area(self):
@@ -198,7 +219,7 @@ class MainScreen(QMainWindow):
         pixmap = image.scaledToWidth(self.max_width)
 
         self.selected_slide = QLabel()
-        self.selected_slide.setPixmap(pixmap)
+        self.update_selected_slide(pixmap)
         view_area.addWidget(self.selected_slide)
         view_area.setAlignment(self.selected_slide, Qt.AlignHCenter)
 
@@ -215,6 +236,7 @@ class MainScreen(QMainWindow):
         self.remove_button = QPushButton()
         self.save_button = QPushButton()
         self.reset_button = QPushButton()
+        self.settings_button = QPushButton()
 
         # https://www.flaticon.com/free-icons/add - Add icons created by reussy - Flaticon
         self.add_button.setIcon(QIcon('data/add.png'))
@@ -247,10 +269,18 @@ class MainScreen(QMainWindow):
 
         self.save_button.clicked.connect(self.save_file)
 
+        # https://www.flaticon.com/free-icons/ui - Ui icons created by reussy - Flaticon
+        self.settings_button.setIcon(QIcon('data/settings.png'))
+        self.settings_button.setIconSize(QSize(32, 32))
+        self.settings_button.setToolTip("Ustawienia")
+
+        self.settings_button.clicked.connect(self.open_settings)
+
         layout.addWidget(self.add_button)
         layout.addWidget(self.remove_button)
         layout.addWidget(self.reset_button)
         layout.addWidget(self.save_button)
+        layout.addWidget(self.settings_button)
 
         return layout
 
@@ -293,6 +323,12 @@ class MainScreen(QMainWindow):
             self.close()
             return
 
+    def open_settings(self):
+        settings_window = SettingsWindow()
+        self.set_icon(settings_window)
+        settings_window.exec()
+        self.settings = self.load_settings()
+
     def on_load_finish(self):
         self.add_button.setDisabled(False)
         added_images = [new_file for new_file in listdir('temp') if new_file not in self.directory_content]
@@ -316,7 +352,7 @@ class MainScreen(QMainWindow):
                 selected_image = QPixmap(self.image_list[0])
                 pixmap = selected_image.scaledToWidth(self.max_width)
 
-                self.selected_slide.setPixmap(pixmap)
+                self.update_selected_slide(pixmap)
             self.image_box.addLayout(slide)
 
         if self.image_list:
@@ -348,7 +384,7 @@ class MainScreen(QMainWindow):
                 new_image = self.default_image
 
             pixmap = QPixmap(new_image).scaledToWidth(self.max_width)
-            self.selected_slide.setPixmap(pixmap)
+            self.update_selected_slide(pixmap)
 
             for image_index in range(self.image_box.count()):
                 self.image_box.itemAt(image_index).layout().itemAt(0).widget().setText(str(image_index + 1))
@@ -364,7 +400,7 @@ class MainScreen(QMainWindow):
         self.selected_image = None
 
         pixmap = self.default_image.scaledToWidth(self.max_width)
-        self.selected_slide.setPixmap(pixmap)
+        self.update_selected_slide(pixmap)
 
         for image_index in reversed(range(self.image_box.count())):
             layout = self.image_box.itemAt(image_index).layout()
