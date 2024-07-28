@@ -46,7 +46,8 @@ class MainScreen(QMainWindow):
                 return json.load(f)
         else:
             return {
-                "dpi": 100
+                "dpi": 100,
+                "append": 0
             }
 
     def setup_layout(self):
@@ -200,8 +201,8 @@ class MainScreen(QMainWindow):
         self.update_selected_slide(pixmap)
 
     def update_selected_slide(self, pixmap):
-        if pixmap.width() > self.screen().availableSize().width()-450:
-            pixmap = pixmap.scaledToWidth(self.screen().availableSize().width()-450)
+        if pixmap.width() > self.screen().availableSize().width() - 450:
+            pixmap = pixmap.scaledToWidth(self.screen().availableSize().width() - 450)
 
         if pixmap.height() > self.screen().availableSize().height():
             pixmap = pixmap.scaledToHeight(self.screen().availableSize().height())
@@ -337,13 +338,30 @@ class MainScreen(QMainWindow):
         self.set_icon(popup_window)
         popup_window.exec()
 
+        if not popup_window.selected_images:
+            return
+
         self.update_slide_list(popup_window.selected_images)
 
     def update_slide_list(self, new_images):
-        for image in new_images:
-            self.image_list.append('temp/{}'.format(image))
+        if self.settings['append'] == 0:
+            insert_place = len(self.image_list)
+        elif self.settings['append'] in [1, 2]:
+            insert_place = self.selected_image if self.selected_image is not None else 0
 
-            slide = self.create_slide(len(self.image_list) - 1)
+        new_images_list = ['temp/{}'.format(image) for image in new_images]
+
+        if not self.image_list:
+            self.image_list = new_images_list
+        elif self.settings['append'] == 0:
+            self.image_list = self.image_list + new_images_list
+        elif self.settings['append'] == 1:
+            self.image_list = self.image_list[:insert_place] + new_images_list + self.image_list[insert_place:]
+        elif self.settings['append'] == 2:
+            self.image_list = self.image_list[:insert_place + 1] + new_images_list + self.image_list[insert_place + 1:]
+
+        for image_index in range(insert_place, insert_place + len(new_images_list)):
+            slide = self.create_slide(image_index)
             if self.selected_image is None:
                 self.selected_image = 0
                 slide.itemAt(1).widget().is_selected = True
@@ -353,7 +371,15 @@ class MainScreen(QMainWindow):
                 pixmap = selected_image.scaledToWidth(self.max_width)
 
                 self.update_selected_slide(pixmap)
-            self.image_box.addLayout(slide)
+            self.image_box.insertLayout(image_index, slide)
+
+        if self.settings['append'] == 1 and self.selected_image >= insert_place and self.image_list != new_images_list:
+            self.selected_image += len(new_images_list)
+
+        to_update = insert_place + len(new_images_list)
+        while to_update < len(self.image_list):
+            self.image_box.itemAt(to_update).layout().itemAt(0).widget().setText(str(to_update+1))
+            to_update += 1
 
         if self.image_list:
             self.reset_button.setDisabled(False)
