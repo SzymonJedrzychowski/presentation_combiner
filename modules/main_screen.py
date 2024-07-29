@@ -329,6 +329,7 @@ class MainScreen(QMainWindow):
         self.set_icon(settings_window)
         settings_window.exec()
         self.settings = self.load_settings()
+        self.worker.settings = self.settings
 
     def on_load_finish(self):
         self.add_button.setDisabled(False)
