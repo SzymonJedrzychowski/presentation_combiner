@@ -377,8 +377,8 @@ class MainScreen(QMainWindow):
             layout.takeAt(0).widget().deleteLater()
             self.image_box.takeAt(self.selected_image)
 
-            if path.exists('temp/{}'.format(self.selected_image)):
-                remove('temp/{}'.format(self.selected_image))
+            if path.exists(self.image_list[self.selected_image]):
+                remove(self.image_list[self.selected_image])
 
             self.image_list.pop(self.selected_image)
 
