@@ -259,7 +259,8 @@ class MainScreen(QMainWindow):
                                                           'Usuń wszystkie slajdy', True)
 
         # https://www.flaticon.com/free-icons/ui - Ui icons created by reussy - Flaticon
-        self.settings_button = WidgetUtil.create_icon_button('data/settings.png', 32, self.__open_settings, 'Ustawienia')
+        self.settings_button = WidgetUtil.create_icon_button('data/settings.png', 32, self.__open_settings,
+                                                             'Ustawienia')
 
         layout.addWidget(self.add_button)
         layout.addWidget(self.remove_button)
@@ -330,8 +331,10 @@ class MainScreen(QMainWindow):
     def __update_slide_list(self, new_images: list[str]):
         if self.settings.append == AppendOptions.AT_END:
             insert_place = len(self.image_list)
-        else:
+        elif self.settings.append == AppendOptions.BEFORE_CURRENT:
             insert_place = self.selected_image if self.selected_image is not None else 0
+        else:
+            insert_place = self.selected_image + 1 if self.selected_image is not None else 0
 
         new_images_list = ['temp/{}'.format(image) for image in new_images]
 
@@ -339,10 +342,8 @@ class MainScreen(QMainWindow):
             self.image_list = new_images_list
         elif self.settings.append == AppendOptions.AT_END:
             self.image_list = self.image_list + new_images_list
-        elif self.settings.append == AppendOptions.BEFORE_CURRENT:
+        else:
             self.image_list = self.image_list[:insert_place] + new_images_list + self.image_list[insert_place:]
-        elif self.settings.append == AppendOptions.AFTER_CURRENT:
-            self.image_list = self.image_list[:insert_place + 1] + new_images_list + self.image_list[insert_place + 1:]
 
         for image_index in range(insert_place, insert_place + len(new_images_list)):
             slide = self.__create_slide(image_index)
