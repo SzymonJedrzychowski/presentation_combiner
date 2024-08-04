@@ -1,4 +1,4 @@
 .idea
 vips-dev-8.15
-modules/__pycache__
+*.pyc
 temp

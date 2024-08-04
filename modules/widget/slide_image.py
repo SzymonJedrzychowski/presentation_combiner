@@ -1,11 +1,11 @@
 from PyQt5.QtCore import Qt, QMimeData
 from PyQt5.QtGui import QDrag, QPixmap
-from PyQt5.QtWidgets import QLabel
+from PyQt5.QtWidgets import QLabel, QWidget
 
 
 class SlideImage(QLabel):
 
-    def __init__(self, parent, image, allow_drag=True):
+    def __init__(self, parent: QWidget, image: str, allow_drag: bool = True):
         super(SlideImage, self).__init__()
         self.parent = parent
 
@@ -15,12 +15,13 @@ class SlideImage(QLabel):
         self.pixmap = QPixmap(self.image)
 
         if not allow_drag:
-            # This all can be a settings
-            if 2.5 * self.pixmap.width() > self.screen().availableSize().width():
-                self.pixmap = self.pixmap.scaledToWidth(int(self.screen().availableSize().width() / 2.5))
+            available_width = self.screen().availableSize().width()
+            available_height = self.screen().availableSize().height()
+            if 2.5 * self.pixmap.width() > available_width:
+                self.pixmap = self.pixmap.scaledToWidth(int(available_width / 2.5))
 
-            if self.pixmap.height() > self.screen().availableSize().height() - 180:
-                self.pixmap = self.pixmap.scaledToHeight(self.screen().availableSize().height() - 180)
+            if self.pixmap.height() > available_height - 180:
+                self.pixmap = self.pixmap.scaledToHeight(available_height - 180)
 
             self.setFixedWidth(self.pixmap.width())
             self.setFixedHeight(self.pixmap.height())
