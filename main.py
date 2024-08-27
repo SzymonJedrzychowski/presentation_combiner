@@ -10,6 +10,7 @@ import sys
 
 def main():
     app = QApplication(sys.argv)
+    app.setStyle('Fusion')
     screen = main_screen.MainScreen()
     screen.showMaximized()
     screen.setFixedSize(screen.screen().availableSize())
