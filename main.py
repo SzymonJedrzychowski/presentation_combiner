@@ -15,6 +15,9 @@ def main():
     screen.showMaximized()
     screen.setFixedSize(screen.screen().availableSize())
 
+    screen.resize_app()
+    screen.repaint()
+
     sys.exit(app.exec_())
 
 

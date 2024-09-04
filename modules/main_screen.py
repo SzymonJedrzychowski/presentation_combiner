@@ -37,7 +37,9 @@ class MainScreen(QMainWindow):
     icon: QIcon | None
     selected_slide: QLabel
     view_area: QGridLayout
-    slides_area: QGridLayout
+    scrollable_area: QGridLayout
+    buttons_area: QHBoxLayout
+    image_buttons_area: QHBoxLayout
 
     def __init__(self):
         super(MainScreen, self).__init__()
@@ -65,14 +67,22 @@ class MainScreen(QMainWindow):
         self.main_layout = QGridLayout()
         self.main_widget = QWidget()
 
-        self.slides_area = self.__create_slides_area()
+        self.scrollable_area = self.__create_scrollable_area()
         self.view_area = self.__create_view_area()
+        self.buttons_area = self.__create_buttons_area()
+        self.image_buttons_area = self.__create_image_buttons_area()
 
-        self.main_layout.addLayout(self.slides_area, 0, 0, 1, 1)
+        self.main_layout.addWidget(self.scrollable_area, 0, 0, 1, 1)
         self.main_layout.addLayout(self.view_area, 0, 1, 1, 1)
+        self.main_layout.addLayout(self.buttons_area, 1, 0, 1, 1)
+        self.main_layout.addLayout(self.image_buttons_area, 1, 1, 1, 1)
 
         self.main_widget.setLayout(self.main_layout)
         self.setCentralWidget(self.main_widget)
+
+    def resize_app(self):
+        self.rotate_button.setFixedSize(self.add_button.size())
+        self.main_layout.setColumnMinimumWidth(1, self.view_area.geometry().width())
 
     def __create_progress_bar(self):
         self.popup_progress_bar = PopupProgressBar()
@@ -86,16 +96,6 @@ class MainScreen(QMainWindow):
         self.worker.finished.connect(self.popup_progress_bar.hide)
         self.worker.finished.connect(self.__on_load_finish)
         self.thread.started.connect(self.worker.proc_counter)
-
-    def __create_slides_area(self) -> QGridLayout:
-        slides_area = QGridLayout()
-        self.scrollable_area = self.__create_scrollable_area()
-        buttons_area = self.__create_buttons_area()
-
-        slides_area.addWidget(self.scrollable_area, 0, 0, 1, 1)
-        slides_area.addLayout(buttons_area, 1, 0, 1, 1)
-
-        return slides_area
 
     def __create_scrollable_area(self) -> QScrollArea:
         scrollable_area = QScrollArea()
@@ -215,8 +215,8 @@ class MainScreen(QMainWindow):
         if pixmap.width() > self.screen().availableSize().width() - 450:
             pixmap = pixmap.scaledToWidth(self.screen().availableSize().width() - 450)
 
-        if pixmap.height() > self.screen().availableSize().height():
-            pixmap = pixmap.scaledToHeight(self.screen().availableSize().height())
+        if pixmap.height() > self.screen().availableSize().height() - 75:
+            pixmap = pixmap.scaledToHeight(self.screen().availableSize().height() - 75)
 
         self.selected_slide.setPixmap(pixmap)
 
@@ -267,6 +267,21 @@ class MainScreen(QMainWindow):
         layout.addWidget(self.reset_button)
         layout.addWidget(self.save_button)
         layout.addWidget(self.settings_button)
+
+        return layout
+
+    def __create_image_buttons_area(self) -> QHBoxLayout:
+        layout = QHBoxLayout()
+
+        font = self.font()
+        font.setPointSize(18)
+        QToolTip.setFont(font)
+
+        # https://www.flaticon.com/free-icons/mobile-phone - Mobile phone icons created by Freepik - Flaticon
+        self.rotate_button = WidgetUtil.create_icon_button('data/rotate-smartphone.png', 32, self.__rotate_image,
+                                                           'Obróc', True)
+
+        layout.addWidget(self.rotate_button)
 
         return layout
 
@@ -370,6 +385,7 @@ class MainScreen(QMainWindow):
             self.reset_button.setDisabled(False)
             self.remove_button.setDisabled(False)
             self.save_button.setDisabled(False)
+            self.rotate_button.setDisabled(False)
 
     def __remove_current_slide(self):
         if self.selected_image is not None:
@@ -408,6 +424,7 @@ class MainScreen(QMainWindow):
             self.reset_button.setDisabled(True)
             self.remove_button.setDisabled(True)
             self.save_button.setDisabled(True)
+            self.rotate_button.setDisabled(True)
 
         self.update()
 
@@ -430,6 +447,7 @@ class MainScreen(QMainWindow):
         self.reset_button.setDisabled(True)
         self.remove_button.setDisabled(True)
         self.save_button.setDisabled(True)
+        self.rotate_button.setDisabled(True)
 
     def __save_file(self):
         if not self.image_list:
@@ -480,6 +498,19 @@ class MainScreen(QMainWindow):
         if directory_content:
             for file in directory_content:
                 remove('temp/{}'.format(file))
+
+    def __rotate_image(self):
+        image_name = self.image_list[self.selected_image]
+        image = Image.open(image_name)
+
+        new_image = image.rotate(-90, expand=True)
+        new_image.save(image_name)
+
+        pixmap = QPixmap(image_name).scaledToWidth(self.max_width)
+        self.__update_selected_slide(pixmap)
+
+        slide_image = self.image_box.itemAt(self.selected_image).layout().itemAt(1).widget()
+        slide_image.refresh_image()
 
     def dragEnterEvent(self, event):
         self.drag_start_time = time()

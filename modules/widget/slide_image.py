@@ -41,6 +41,15 @@ class SlideImage(QLabel):
                            "border-color: {};".format(colour))
         self.update()
 
+    def refresh_image(self):
+        self.pixmap = QPixmap(self.image)
+
+        self.pixmap = self.pixmap.scaledToWidth(300)
+        self.setFixedWidth(self.pixmap.width())
+        self.setFixedHeight(self.pixmap.height())
+
+        self.setPixmap(self.pixmap)
+
     def mousePressEvent(self, event):
         if self.allow_drag:
             drag = QDrag(self)
