@@ -18,6 +18,8 @@ from modules.widget.slide_image import SlideImage
 from modules.other.worker import Worker
 
 _TEMPORARY_IMAGE_PATH = 'data/temporary_image.jpg'
+_DEFAULT_SCROLL_SPEED = 5
+_MAX_SCROLL_SPEED = 25
 
 
 class MainScreen(QMainWindow):
@@ -52,7 +54,9 @@ class MainScreen(QMainWindow):
         self.selected_image: int | None = None
         self.max_width = self.screen().availableSize().width() - 450
         self.scroll_direction = 0
+        self.scroll_speed = _DEFAULT_SCROLL_SPEED
         self.drag_start_time = 0
+        self.scroll_start_time = 0
         self.settings = Settings()
 
         self.scroll_timer = self.__create_timer()
@@ -132,9 +136,14 @@ class MainScreen(QMainWindow):
         return slide
 
     def __update_scroll_value(self):
+        if self.scroll_start_time != 0:
+            elapsed_seconds = int(time() - self.scroll_start_time)
+            self.scroll_speed = min(
+                (max(elapsed_seconds * 2, 1)) * _DEFAULT_SCROLL_SPEED, _MAX_SCROLL_SPEED)
+
         scroll_bar = self.scrollable_area.verticalScrollBar()
         scroll_bar_value = scroll_bar.value()
-        scroll_bar.setValue(scroll_bar_value + self.scroll_direction * 5)
+        scroll_bar.setValue(scroll_bar_value + self.scroll_direction * self.scroll_speed)
 
     def __get_breakpoints_without_drop_widget(self, drop_widget) -> tuple[list[int], str]:
         breakpoints = []
@@ -516,16 +525,22 @@ class MainScreen(QMainWindow):
         drag_position_y = event.pos().y()
         geometry = self.scrollable_area.geometry()
         if drag_position_y < geometry.getCoords()[1] + 150 and self.scroll_direction == 0:
+            if self.scroll_direction != -1:
+                self.scroll_start_time = time()
             self.scroll_direction = -1
             self.scroll_timer.start()
         elif drag_position_y > geometry.getCoords()[3] - 150 and self.scroll_direction == 0:
+            if self.scroll_direction != 1:
+                self.scroll_start_time = time()
             self.scroll_direction = 1
             self.scroll_timer.start()
         elif (drag_position_y < geometry.getCoords()[1] + 150
               or drag_position_y > geometry.getCoords()[3] - 150):
             pass
         else:
+            self.scroll_timer.stop()
             self.scroll_direction = 0
+            self.scroll_speed = _DEFAULT_SCROLL_SPEED
 
     def dropEvent(self, event):
         if time() - self.drag_start_time > 0.1:
