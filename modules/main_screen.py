@@ -134,11 +134,7 @@ class MainScreen(QMainWindow):
     def __update_scroll_value(self):
         scroll_bar = self.scrollable_area.verticalScrollBar()
         scroll_bar_value = scroll_bar.value()
-        scroll_max_value = self.scrollable_area.geometry().height()
-        if self.scroll_direction == -1:
-            scroll_bar.setValue(max(scroll_bar_value - 5, 0))
-        elif self.scroll_direction == 1:
-            scroll_bar.setValue(min(scroll_bar_value + 5, scroll_max_value))
+        scroll_bar.setValue(scroll_bar_value + self.scroll_direction * 5)
 
     def __get_breakpoints_without_drop_widget(self, drop_widget) -> tuple[list[int], str]:
         breakpoints = []
