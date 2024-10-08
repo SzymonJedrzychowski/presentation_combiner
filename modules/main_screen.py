@@ -18,8 +18,6 @@ from modules.widget.slide_image import SlideImage
 from modules.other.worker import Worker
 
 _TEMPORARY_IMAGE_PATH = 'data/temporary_image.jpg'
-_DEFAULT_SCROLL_SPEED = 5
-_MAX_SCROLL_SPEED = 25
 
 
 class MainScreen(QMainWindow):
@@ -54,10 +52,10 @@ class MainScreen(QMainWindow):
         self.selected_image: int | None = None
         self.max_width = self.screen().availableSize().width() - 450
         self.scroll_direction = 0
-        self.scroll_speed = _DEFAULT_SCROLL_SPEED
         self.drag_start_time = 0
         self.scroll_start_time = 0
         self.settings = Settings()
+        self.scroll_speed = self.settings.scroll_speed
 
         self.scroll_timer = self.__create_timer()
 
@@ -137,9 +135,9 @@ class MainScreen(QMainWindow):
 
     def __update_scroll_value(self):
         if self.scroll_start_time != 0:
-            elapsed_seconds = int(time() - self.scroll_start_time)
+            elapsed_half_seconds = int((time() - self.scroll_start_time) * 2)
             self.scroll_speed = min(
-                (max(elapsed_seconds * 2, 1)) * _DEFAULT_SCROLL_SPEED, _MAX_SCROLL_SPEED)
+                elapsed_half_seconds * 5 + self.settings.scroll_speed, self.settings.max_scroll_speed)
 
         scroll_bar = self.scrollable_area.verticalScrollBar()
         scroll_bar_value = scroll_bar.value()
@@ -540,7 +538,7 @@ class MainScreen(QMainWindow):
         else:
             self.scroll_timer.stop()
             self.scroll_direction = 0
-            self.scroll_speed = _DEFAULT_SCROLL_SPEED
+            self.scroll_speed = self.settings.scroll_speed
 
     def dropEvent(self, event):
         if time() - self.drag_start_time > 0.1:

@@ -20,6 +20,8 @@ class SettingsWindow(QDialog):
         self.layout = QGridLayout()
 
         self.__create_dpi_settings()
+        self.__create_scroll_speed_settings()
+        self.__create_max_scroll_speed_settings()
         self.__create_append_settings()
         self.__create_buttons()
 
@@ -37,6 +39,34 @@ class SettingsWindow(QDialog):
         self.dpi_input.setValidator(validator)
 
         self.__create_row('dpi', 'DPI (50-150):', self.dpi_input)
+
+    def __create_scroll_speed_settings(self):
+        self.scroll_speed_input = QLineEdit()
+        self.scroll_speed_input.setAlignment(Qt.AlignRight)
+        self.scroll_speed_input.setFont(self.custom_font)
+        self.scroll_speed_input.textEdited.connect(self.__validate_values)
+        self.scroll_speed_input.setToolTip(
+            'Co pół sekundy, prędkość przewijania wzrośnie o 5, aż do maksymalnej wartości. Musi być mniejsza niż "Maksymalna prędkość przewijania".')
+        validator = QRegExpValidator(QRegExp('[1-9][0-9]{1,2}'), self.scroll_speed_input)
+        self.scroll_speed_input.setPlaceholderText(str(self.settings.scroll_speed))
+        self.scroll_speed_input.setText(str(self.settings.scroll_speed))
+        self.scroll_speed_input.setValidator(validator)
+
+        self.__create_row('scroll_speed', 'Początkowa prędkość przewijania (5-100):', self.scroll_speed_input)
+
+    def __create_max_scroll_speed_settings(self):
+        self.max_scroll_speed_input = QLineEdit()
+        self.max_scroll_speed_input.setAlignment(Qt.AlignRight)
+        self.max_scroll_speed_input.setFont(self.custom_font)
+        self.max_scroll_speed_input.textEdited.connect(self.__validate_values)
+        self.max_scroll_speed_input.setToolTip(
+            'Co pół sekundy, prędkość przewijania wzrośnie o 5, aż do maksymalnej wartości. Musi być większa niż "Początkowa prędkość przewijania".')
+        validator = QRegExpValidator(QRegExp('[1-9][0-9]{1,2}'), self.max_scroll_speed_input)
+        self.max_scroll_speed_input.setPlaceholderText(str(self.settings.max_scroll_speed))
+        self.max_scroll_speed_input.setText(str(self.settings.max_scroll_speed))
+        self.max_scroll_speed_input.setValidator(validator)
+
+        self.__create_row('max_scroll_speed', 'Maksymalna prędkość przewijania (5-100):', self.max_scroll_speed_input)
 
     def __create_append_settings(self):
         self.append_input = QComboBox()

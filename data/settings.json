@@ -1,4 +1,6 @@
 {
   "dpi": 100,
-  "append": 0
+  "append": 0,
+  "scroll_speed": 10,
+  "max_scroll_speed": 25
 }
