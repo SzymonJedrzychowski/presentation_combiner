@@ -2,19 +2,16 @@ from json import dump, load
 from os.path import exists
 
 from modules.enum.append_options import AppendOptions
+from modules.other.global_variables import GlobalVariables
 
-_FILENAME: str = 'data/settings.json'
-_MIN_SCROLL_SPEED = 5
-_DEFAULT_SCROLL_SPEED = 10
-_DEFAULT_MAX_SCROLL_SPEED = 25
-_MAX_SCROLL_SPEED = 100
+_FILENAME: str = GlobalVariables.SETTINGS
 
 
 class Settings:
     _dpi: int = 100
     _append: AppendOptions = AppendOptions.AT_END
-    _scroll_speed: int = _DEFAULT_SCROLL_SPEED
-    _max_scroll_speed: int = _DEFAULT_MAX_SCROLL_SPEED
+    _scroll_speed: int = GlobalVariables.DEFAULT_SCROLL_SPEED
+    _max_scroll_speed: int = GlobalVariables.DEFAULT_MAX_SCROLL_SPEED
     _dict: dict[str, int] = {
         'dpi': _dpi,
         'append': _append.index,
@@ -96,15 +93,16 @@ class Settings:
     def __validate_dpi(inputs: dict) -> bool:
         dpi_value = inputs['dpi'].text()
 
-        return dpi_value != '' and 50 <= int(dpi_value) <= 150
+        return dpi_value != '' and GlobalVariables.MIN_DPI_VALUE <= int(dpi_value) <= GlobalVariables.MAX_DPI_VALUE
 
     @staticmethod
     def __validate_scroll_speeds(inputs: dict) -> bool:
         scroll_speed = inputs['scroll_speed'].text()
         max_scroll_speed = inputs['max_scroll_speed'].text()
 
-        scroll_speed_validation = scroll_speed != '' and _MIN_SCROLL_SPEED <= int(scroll_speed) <= _MAX_SCROLL_SPEED
-        max_scroll_speed_validation = max_scroll_speed != '' and _MIN_SCROLL_SPEED <= int(
-            max_scroll_speed) <= _MAX_SCROLL_SPEED
+        scroll_speed_validation = scroll_speed != '' and GlobalVariables.MIN_SCROLL_SPEED <= int(
+            scroll_speed) <= GlobalVariables.MAX_SCROLL_SPEED
+        max_scroll_speed_validation = max_scroll_speed != '' and GlobalVariables.MIN_SCROLL_SPEED <= int(
+            max_scroll_speed) <= GlobalVariables.MAX_SCROLL_SPEED
 
         return scroll_speed_validation and max_scroll_speed_validation and int(scroll_speed) <= int(max_scroll_speed)

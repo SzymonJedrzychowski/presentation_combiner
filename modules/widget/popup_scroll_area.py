@@ -1,5 +1,7 @@
 from PyQt5.QtWidgets import QScrollArea
 
+from modules.other.global_variables import GlobalVariables
+
 
 class PopupScrollArea(QScrollArea):
 
@@ -7,4 +9,4 @@ class PopupScrollArea(QScrollArea):
         direction = 1 if event.angleDelta().y() < 0 else -1
 
         scroll = self.horizontalScrollBar()
-        scroll.setValue(scroll.value() + 60 * direction)
+        scroll.setValue(scroll.value() + GlobalVariables.EMPTY_SCROLL_VALUE * direction)

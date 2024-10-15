@@ -3,6 +3,7 @@ from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtWidgets import QToolTip, QPushButton, QDialog, QHBoxLayout
 
+from modules.other.global_variables import GlobalVariables
 from modules.widget.slide_image import SlideImage
 
 
@@ -52,7 +53,7 @@ class WidgetUtil:
         image = Image.new('RGB', (1280, 720), color=(255, 255, 255))
 
         draw = ImageDraw.Draw(image)
-        font = ImageFont.truetype('arial.ttf', 52)
+        font = ImageFont.truetype(GlobalVariables.FONT, 52)
         text = 'Naciśnij "Dodaj slajdy (+)" aby rozpocząć.'
 
         draw.text((100, 100), text, (0, 0, 0), font=font)

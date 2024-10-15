@@ -8,6 +8,7 @@ from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QMainWindow, QGridLayout, QWidget, QScrollArea, QVBoxLayout, QHBoxLayout, QLabel, \
     QPushButton, QFileDialog, QDialog, QToolTip
 
+from modules.other.global_variables import GlobalVariables
 from modules.util.widget_util import WidgetUtil
 from modules.enum.append_options import AppendOptions
 from modules.widget.popup_progress_bar import PopupProgressBar
@@ -16,8 +17,6 @@ from modules.other.settings import Settings
 from modules.widget.settings_window import SettingsWindow
 from modules.widget.slide_image import SlideImage
 from modules.other.worker import Worker
-
-_TEMPORARY_IMAGE_PATH = 'data/temporary_image.jpg'
 
 
 class MainScreen(QMainWindow):
@@ -137,7 +136,8 @@ class MainScreen(QMainWindow):
         if self.scroll_start_time != 0:
             elapsed_half_seconds = int((time() - self.scroll_start_time) * 2)
             self.scroll_speed = min(
-                elapsed_half_seconds * 5 + self.settings.scroll_speed, self.settings.max_scroll_speed)
+                elapsed_half_seconds * GlobalVariables.SCROLL_SPEED_INCREMENT + self.settings.scroll_speed,
+                self.settings.max_scroll_speed)
 
         scroll_bar = self.scrollable_area.verticalScrollBar()
         scroll_bar_value = scroll_bar.value()
@@ -248,21 +248,27 @@ class MainScreen(QMainWindow):
         QToolTip.setFont(font)
 
         # https://www.flaticon.com/free-icons/add - Add icons created by reussy - Flaticon
-        self.add_button = WidgetUtil.create_icon_button('data/add.png', 32, self.__load_files, 'Dodaj slajdy')
+        self.add_button = WidgetUtil.create_icon_button(GlobalVariables.ADD_ICON, GlobalVariables.ICON_SIZE,
+                                                        self.__load_files,
+                                                        'Dodaj slajdy')
 
         # https://www.flaticon.com/free-icons/less - Less icons created by reussy - Flaticon
-        self.remove_button = WidgetUtil.create_icon_button('data/remove.png', 32, self.__remove_current_slide,
+        self.remove_button = WidgetUtil.create_icon_button(GlobalVariables.REMOVE_ICON, GlobalVariables.ICON_SIZE,
+                                                           self.__remove_current_slide,
                                                            'Usuń obecny slajd', True)
 
         # https://www.flaticon.com/free-icons/down-arrow - Down arrow icons created by reussy - Flaticon
-        self.save_button = WidgetUtil.create_icon_button('data/download.png', 32, self.__save_file, 'Pobierz pdf', True)
+        self.save_button = WidgetUtil.create_icon_button(GlobalVariables.DOWNLOAD_ICON, GlobalVariables.ICON_SIZE,
+                                                         self.__save_file, 'Pobierz pdf', True)
 
         # https://www.flaticon.com/free-icons/close - Close icons created by reussy - Flaticon
-        self.reset_button = WidgetUtil.create_icon_button('data/reset.png', 32, self.__reset_slides,
+        self.reset_button = WidgetUtil.create_icon_button(GlobalVariables.RESET_ICON, GlobalVariables.ICON_SIZE,
+                                                          self.__reset_slides,
                                                           'Usuń wszystkie slajdy', True)
 
         # https://www.flaticon.com/free-icons/ui - Ui icons created by reussy - Flaticon
-        self.settings_button = WidgetUtil.create_icon_button('data/settings.png', 32, self.__open_settings,
+        self.settings_button = WidgetUtil.create_icon_button(GlobalVariables.SETTINGS_ICON, GlobalVariables.ICON_SIZE,
+                                                             self.__open_settings,
                                                              'Ustawienia')
 
         layout.addWidget(self.add_button)
@@ -281,7 +287,8 @@ class MainScreen(QMainWindow):
         QToolTip.setFont(font)
 
         # https://www.flaticon.com/free-icons/mobile-phone - Mobile phone icons created by Freepik - Flaticon
-        self.rotate_button = WidgetUtil.create_icon_button('data/rotate-smartphone.png', 32, self.__rotate_image,
+        self.rotate_button = WidgetUtil.create_icon_button(GlobalVariables.ROTATE_ICON, GlobalVariables.ICON_SIZE,
+                                                           self.__rotate_image,
                                                            'Obróc', True)
 
         layout.addWidget(self.rotate_button)
@@ -291,10 +298,10 @@ class MainScreen(QMainWindow):
     def __load_files(self):
         file = QFileDialog.getOpenFileName(self, 'Wybierz PDF', filter='PDF (*.pdf)')[0]
 
-        if file == "":
+        if not file:
             return
 
-        self.directory_content = listdir('temp')
+        self.directory_content = listdir(GlobalVariables.TEMP)
         try:
             self.popup_progress_bar.bar.setValue(0)
             self.add_button.setDisabled(True)
@@ -335,7 +342,8 @@ class MainScreen(QMainWindow):
 
     def __on_load_finish(self):
         self.add_button.setDisabled(False)
-        added_images = [new_file for new_file in listdir('temp') if new_file not in self.directory_content]
+        added_images = [new_file for new_file in listdir(GlobalVariables.TEMP) if
+                        new_file not in self.directory_content]
 
         popup_window = PopupWindow(self, self.worker.file, added_images)
         self.__set_icon(popup_window)
@@ -354,7 +362,7 @@ class MainScreen(QMainWindow):
         else:
             insert_place = self.selected_image + 1 if self.selected_image is not None else 0
 
-        new_images_list = ['temp/{}'.format(image) for image in new_images]
+        new_images_list = [path.join(GlobalVariables.TEMP, image) for image in new_images]
 
         if not self.image_list:
             self.image_list = new_images_list
@@ -437,8 +445,8 @@ class MainScreen(QMainWindow):
         pixmap = self.default_image.scaledToWidth(self.max_width)
         self.__update_selected_slide(pixmap)
 
-        for image_file in listdir('temp'):
-            remove('temp/{}'.format(image_file))
+        for image_file in listdir(GlobalVariables.TEMP):
+            remove(path.join(GlobalVariables.TEMP, image_file))
 
         for image_index in reversed(range(self.image_box.count())):
             layout = self.image_box.itemAt(image_index).layout()
@@ -460,11 +468,11 @@ class MainScreen(QMainWindow):
         self.__set_icon(file_dialog)
         filename, _ = file_dialog.getSaveFileName(self, 'Zapisz', '', 'PDF (*.pdf)')
 
-        if filename == '':
+        if not filename:
             return
 
-        if not filename.endswith('.pdf'):
-            filename += '.pdf'
+        if not filename.endswith(GlobalVariables.PDF):
+            filename += GlobalVariables.PDF
 
         images = [Image.open(image) for image in self.image_list]
 
@@ -482,25 +490,23 @@ class MainScreen(QMainWindow):
         return timer
 
     def __organize_and_load_structures(self):
-        if path.exists('data/logo.png'):
+        if path.exists(GlobalVariables.LOGO_ICON):
             # https://www.flaticon.com/free-icons/squirrel - Squirrel icons created by Freepik - Flaticon
-            self.icon = QIcon('data/logo.png')
+            self.icon = QIcon(GlobalVariables.LOGO_ICON)
         else:
             self.icon = None
 
-        if not path.exists(_TEMPORARY_IMAGE_PATH):
-            WidgetUtil.create_default_image(_TEMPORARY_IMAGE_PATH)
+        if not path.exists(GlobalVariables.TEMPORARY_IMAGE):
+            WidgetUtil.create_default_image(GlobalVariables.TEMPORARY_IMAGE)
 
-        self.default_image = QPixmap(_TEMPORARY_IMAGE_PATH)
+        self.default_image = QPixmap(GlobalVariables.TEMPORARY_IMAGE)
 
-        if not path.exists('temp'):
-            makedirs('temp')
-            windll.kernel32.SetFileAttributesW('temp', 0x02)
+        if not path.exists(GlobalVariables.TEMP):
+            makedirs(GlobalVariables.TEMP)
+            windll.kernel32.SetFileAttributesW(GlobalVariables.TEMP, 0x02)
 
-        directory_content = listdir('temp')
-        if directory_content:
-            for file in directory_content:
-                remove('temp/{}'.format(file))
+        for file in listdir(GlobalVariables.TEMP):
+            remove(path.join(GlobalVariables.TEMP, file))
 
     def __rotate_image(self):
         image_name = self.image_list[self.selected_image]
@@ -552,5 +558,5 @@ class MainScreen(QMainWindow):
         event.accept()
 
     def closeEvent(self, event):
-        for image_file in listdir('temp'):
-            remove('temp/{}'.format(image_file))
+        for image_file in listdir(GlobalVariables.TEMP):
+            remove(GlobalVariables.TEMP, image_file)
