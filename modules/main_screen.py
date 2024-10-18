@@ -3,10 +3,10 @@ from os import listdir, remove, path, makedirs
 from time import time
 
 from PIL import Image
-from PyQt5.QtCore import QTimer, Qt, QThread
+from PyQt5.QtCore import QTimer, Qt, QThread, QSize
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QMainWindow, QGridLayout, QWidget, QScrollArea, QVBoxLayout, QHBoxLayout, QLabel, \
-    QPushButton, QFileDialog, QDialog, QToolTip
+    QFileDialog, QDialog, QAction
 
 from modules.other.global_variables import GlobalVariables
 from modules.util.widget_util import WidgetUtil
@@ -26,19 +26,17 @@ class MainScreen(QMainWindow):
     thread: QThread
     scrollable_area: QScrollArea
     image_box: QVBoxLayout
-    add_button: QPushButton
-    remove_button: QPushButton
-    save_button: QPushButton
-    reset_button: QPushButton
-    settings_button: QPushButton
+    add_action: QAction
+    remove_action: QAction
+    save_action: QAction
+    reset_action: QAction
+    settings_action: QAction
+    rotate_action: QAction
     default_image: QPixmap
     main_widget: QWidget
     icon: QIcon | None
     selected_slide: QLabel
     view_area: QGridLayout
-    scrollable_area: QGridLayout
-    buttons_area: QHBoxLayout
-    image_buttons_area: QHBoxLayout
 
     def __init__(self):
         super(MainScreen, self).__init__()
@@ -68,21 +66,18 @@ class MainScreen(QMainWindow):
         self.main_layout = QGridLayout()
         self.main_widget = QWidget()
 
+        self.__create_toolbar()
+
         self.scrollable_area = self.__create_scrollable_area()
         self.view_area = self.__create_view_area()
-        self.buttons_area = self.__create_buttons_area()
-        self.image_buttons_area = self.__create_image_buttons_area()
 
         self.main_layout.addWidget(self.scrollable_area, 0, 0, 1, 1)
         self.main_layout.addLayout(self.view_area, 0, 1, 1, 1)
-        self.main_layout.addLayout(self.buttons_area, 1, 0, 1, 1)
-        self.main_layout.addLayout(self.image_buttons_area, 1, 1, 1, 1)
 
         self.main_widget.setLayout(self.main_layout)
         self.setCentralWidget(self.main_widget)
 
     def resize_app(self):
-        self.rotate_button.setFixedSize(self.add_button.size())
         self.main_layout.setColumnMinimumWidth(1, self.view_area.geometry().width())
 
     def __create_progress_bar(self):
@@ -240,60 +235,49 @@ class MainScreen(QMainWindow):
 
         return view_area
 
-    def __create_buttons_area(self) -> QHBoxLayout:
-        layout = QHBoxLayout()
-
-        font = self.font()
-        font.setPointSize(18)
-        QToolTip.setFont(font)
-
-        # https://www.flaticon.com/free-icons/add - Add icons created by reussy - Flaticon
-        self.add_button = WidgetUtil.create_icon_button(GlobalVariables.ADD_ICON, GlobalVariables.ICON_SIZE,
-                                                        self.__load_files,
-                                                        'Dodaj slajdy')
-
-        # https://www.flaticon.com/free-icons/less - Less icons created by reussy - Flaticon
-        self.remove_button = WidgetUtil.create_icon_button(GlobalVariables.REMOVE_ICON, GlobalVariables.ICON_SIZE,
-                                                           self.__remove_current_slide,
-                                                           'Usuń obecny slajd', True)
-
-        # https://www.flaticon.com/free-icons/down-arrow - Down arrow icons created by reussy - Flaticon
-        self.save_button = WidgetUtil.create_icon_button(GlobalVariables.DOWNLOAD_ICON, GlobalVariables.ICON_SIZE,
-                                                         self.__save_file, 'Pobierz pdf', True)
-
-        # https://www.flaticon.com/free-icons/close - Close icons created by reussy - Flaticon
-        self.reset_button = WidgetUtil.create_icon_button(GlobalVariables.RESET_ICON, GlobalVariables.ICON_SIZE,
-                                                          self.__reset_slides,
-                                                          'Usuń wszystkie slajdy', True)
+    def __create_toolbar(self):
+        tool_bar = self.addToolBar("Toolbar")
+        tool_bar.setIconSize(QSize(GlobalVariables.ICON_SIZE, GlobalVariables.ICON_SIZE))
+        tool_bar.setMovable(False)
 
         # https://www.flaticon.com/free-icons/ui - Ui icons created by reussy - Flaticon
-        self.settings_button = WidgetUtil.create_icon_button(GlobalVariables.SETTINGS_ICON, GlobalVariables.ICON_SIZE,
-                                                             self.__open_settings,
-                                                             'Ustawienia')
+        self.settings_action = WidgetUtil.create_action(GlobalVariables.SETTINGS_ICON,
+                                                        self.__open_settings,
+                                                        'Ustawienia')
 
-        layout.addWidget(self.add_button)
-        layout.addWidget(self.remove_button)
-        layout.addWidget(self.reset_button)
-        layout.addWidget(self.save_button)
-        layout.addWidget(self.settings_button)
+        # https://www.flaticon.com/free-icons/down-arrow - Down arrow icons created by reussy - Flaticon
+        self.save_action = WidgetUtil.create_action(GlobalVariables.DOWNLOAD_ICON,
+                                                    self.__save_file, 'Pobierz pdf', True)
 
-        return layout
+        # https://www.flaticon.com/free-icons/close - Close icons created by reussy - Flaticon
+        self.reset_action = WidgetUtil.create_action(GlobalVariables.RESET_ICON,
+                                                     self.__reset_slides,
+                                                     'Usuń wszystkie slajdy', True)
 
-    def __create_image_buttons_area(self) -> QHBoxLayout:
-        layout = QHBoxLayout()
+        # https://www.flaticon.com/free-icons/add - Add icons created by reussy - Flaticon
+        self.add_action = WidgetUtil.create_action(GlobalVariables.ADD_ICON,
+                                                   self.__load_files,
+                                                   'Dodaj slajdy')
 
-        font = self.font()
-        font.setPointSize(18)
-        QToolTip.setFont(font)
+        # https://www.flaticon.com/free-icons/less - Less icons created by reussy - Flaticon
+        self.remove_action = WidgetUtil.create_action(GlobalVariables.REMOVE_ICON,
+                                                      self.__remove_current_slide,
+                                                      'Usuń obecny slajd', True)
 
         # https://www.flaticon.com/free-icons/mobile-phone - Mobile phone icons created by Freepik - Flaticon
-        self.rotate_button = WidgetUtil.create_icon_button(GlobalVariables.ROTATE_ICON, GlobalVariables.ICON_SIZE,
-                                                           self.__rotate_image,
-                                                           'Obróc', True)
+        self.rotate_action = WidgetUtil.create_action(GlobalVariables.ROTATE_ICON,
+                                                      self.__rotate_image,
+                                                      'Obróc', True)
 
-        layout.addWidget(self.rotate_button)
-
-        return layout
+        tool_bar.addAction(self.settings_action)
+        tool_bar.addSeparator()
+        tool_bar.addAction(self.save_action)
+        tool_bar.addAction(self.reset_action)
+        tool_bar.addSeparator()
+        tool_bar.addAction(self.add_action)
+        tool_bar.addAction(self.remove_action)
+        tool_bar.addSeparator()
+        tool_bar.addAction(self.rotate_action)
 
     def __load_files(self):
         file = QFileDialog.getOpenFileName(self, 'Wybierz PDF', filter='PDF (*.pdf)')[0]
@@ -304,7 +288,7 @@ class MainScreen(QMainWindow):
         self.directory_content = listdir(GlobalVariables.TEMP)
         try:
             self.popup_progress_bar.bar.setValue(0)
-            self.add_button.setDisabled(True)
+            self.add_action.setDisabled(True)
             self.worker.file = file
             self.popup_progress_bar.show()
             self.thread.start()
@@ -341,7 +325,7 @@ class MainScreen(QMainWindow):
         self.worker.settings = self.settings
 
     def __on_load_finish(self):
-        self.add_button.setDisabled(False)
+        self.add_action.setDisabled(False)
         added_images = [new_file for new_file in listdir(GlobalVariables.TEMP) if
                         new_file not in self.directory_content]
 
@@ -393,10 +377,10 @@ class MainScreen(QMainWindow):
             to_update += 1
 
         if self.image_list:
-            self.reset_button.setDisabled(False)
-            self.remove_button.setDisabled(False)
-            self.save_button.setDisabled(False)
-            self.rotate_button.setDisabled(False)
+            self.reset_action.setDisabled(False)
+            self.remove_action.setDisabled(False)
+            self.save_action.setDisabled(False)
+            self.rotate_action.setDisabled(False)
 
     def __remove_current_slide(self):
         if self.selected_image is not None:
@@ -432,10 +416,10 @@ class MainScreen(QMainWindow):
                 self.image_box.itemAt(image_index).layout().itemAt(0).widget().setText(str(image_index + 1))
 
         if not self.image_list:
-            self.reset_button.setDisabled(True)
-            self.remove_button.setDisabled(True)
-            self.save_button.setDisabled(True)
-            self.rotate_button.setDisabled(True)
+            self.reset_action.setDisabled(True)
+            self.remove_action.setDisabled(True)
+            self.save_action.setDisabled(True)
+            self.rotate_action.setDisabled(True)
 
         self.update()
 
@@ -455,10 +439,10 @@ class MainScreen(QMainWindow):
             self.image_box.takeAt(image_index)
             self.image_list.pop(image_index)
 
-        self.reset_button.setDisabled(True)
-        self.remove_button.setDisabled(True)
-        self.save_button.setDisabled(True)
-        self.rotate_button.setDisabled(True)
+        self.reset_action.setDisabled(True)
+        self.remove_action.setDisabled(True)
+        self.save_action.setDisabled(True)
+        self.rotate_action.setDisabled(True)
 
     def __save_file(self):
         if not self.image_list:
