@@ -6,7 +6,7 @@ from PIL import Image
 from PyQt5.QtCore import QTimer, Qt, QThread, QSize
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QMainWindow, QGridLayout, QWidget, QScrollArea, QVBoxLayout, QHBoxLayout, QLabel, \
-    QFileDialog, QDialog, QAction
+    QFileDialog, QDialog
 
 from modules.other.global_variables import GlobalVariables
 from modules.util.widget_util import WidgetUtil
@@ -20,23 +20,6 @@ from modules.other.worker import Worker
 
 
 class MainScreen(QMainWindow):
-    main_layout: QGridLayout
-    popup_progress_bar: PopupProgressBar
-    worker: Worker
-    thread: QThread
-    scrollable_area: QScrollArea
-    image_box: QVBoxLayout
-    add_action: QAction
-    remove_action: QAction
-    save_action: QAction
-    reset_action: QAction
-    settings_action: QAction
-    rotate_action: QAction
-    default_image: QPixmap
-    main_widget: QWidget
-    icon: QIcon | None
-    selected_slide: QLabel
-    view_area: QGridLayout
 
     def __init__(self):
         super(MainScreen, self).__init__()
