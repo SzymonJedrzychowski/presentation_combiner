@@ -543,4 +543,4 @@ class MainScreen(QMainWindow):
 
     def closeEvent(self, event):
         for image_file in listdir(GlobalVariables.TEMP):
-            remove(GlobalVariables.TEMP, image_file)
+            remove(path.join(GlobalVariables.TEMP, image_file))
