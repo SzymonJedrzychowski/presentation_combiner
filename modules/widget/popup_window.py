@@ -10,10 +10,6 @@ _IMAGE_PATH = r'temp/{}'
 
 
 class PopupWindow(QDialog):
-    function_button = None
-    finish_button = None
-    main_layout = None
-    image_box = None
 
     def __init__(self, parent, file, added_images):
         super().__init__(parent)

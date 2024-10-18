@@ -8,7 +8,6 @@ from modules.util.widget_util import WidgetUtil
 
 
 class SettingsWindow(QDialog):
-    save_button = None
 
     def __init__(self, settings: Settings):
         super().__init__()
