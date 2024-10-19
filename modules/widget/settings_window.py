@@ -1,6 +1,5 @@
-from PyQt5.QtCore import Qt, QRegExp
-from PyQt5.QtGui import QRegExpValidator
-from PyQt5.QtWidgets import QDialog, QLabel, QLineEdit, QGridLayout, QComboBox, QWidget
+from PyQt5.QtCore import QRegExp
+from PyQt5.QtWidgets import QDialog, QLabel, QGridLayout, QComboBox, QWidget
 
 from modules.enum.append_options import AppendOptions
 from modules.other.settings import Settings
@@ -27,44 +26,23 @@ class SettingsWindow(QDialog):
         self.setLayout(self.layout)
 
     def __create_dpi_settings(self):
-        self.dpi_input = QLineEdit()
-        self.dpi_input.setAlignment(Qt.AlignRight)
-        self.dpi_input.setFont(self.custom_font)
-        self.dpi_input.textEdited.connect(self.__validate_values)
-        self.dpi_input.setToolTip('Im większa wartość, tym lepsza jakość, ale dłuższy czas wczytywania.')
-        validator = QRegExpValidator(QRegExp('[1-9][0-9]{1,2}'), self.dpi_input)
-        self.dpi_input.setPlaceholderText(str(self.settings.dpi))
-        self.dpi_input.setText(str(self.settings.dpi))
-        self.dpi_input.setValidator(validator)
-
+        self.dpi_input = WidgetUtil.create_qline_edit_settings(self.custom_font, self.__validate_values,
+                                                               'Im większa wartość, tym lepsza jakość, ale dłuższy czas wczytywania.',
+                                                               QRegExp('[1-9][0-9]{1,2}'), self.settings.dpi)
         self.__create_row('dpi', 'DPI (50-150):', self.dpi_input)
 
     def __create_scroll_speed_settings(self):
-        self.scroll_speed_input = QLineEdit()
-        self.scroll_speed_input.setAlignment(Qt.AlignRight)
-        self.scroll_speed_input.setFont(self.custom_font)
-        self.scroll_speed_input.textEdited.connect(self.__validate_values)
-        self.scroll_speed_input.setToolTip(
-            'Co pół sekundy, prędkość przewijania wzrośnie o 5, aż do maksymalnej wartości. Musi być mniejsza niż "Maksymalna prędkość przewijania".')
-        validator = QRegExpValidator(QRegExp('[1-9][0-9]{1,2}'), self.scroll_speed_input)
-        self.scroll_speed_input.setPlaceholderText(str(self.settings.scroll_speed))
-        self.scroll_speed_input.setText(str(self.settings.scroll_speed))
-        self.scroll_speed_input.setValidator(validator)
-
+        self.scroll_speed_input = WidgetUtil.create_qline_edit_settings(self.custom_font, self.__validate_values,
+                                                                        'Co pół sekundy, prędkość przewijania wzrośnie o 5, aż do maksymalnej wartości. Musi być mniejsza niż "Maksymalna prędkość przewijania".',
+                                                                        QRegExp('[1-9][0-9]{1,2}'),
+                                                                        self.settings.scroll_speed)
         self.__create_row('scroll_speed', 'Początkowa prędkość przewijania (5-100):', self.scroll_speed_input)
 
     def __create_max_scroll_speed_settings(self):
-        self.max_scroll_speed_input = QLineEdit()
-        self.max_scroll_speed_input.setAlignment(Qt.AlignRight)
-        self.max_scroll_speed_input.setFont(self.custom_font)
-        self.max_scroll_speed_input.textEdited.connect(self.__validate_values)
-        self.max_scroll_speed_input.setToolTip(
-            'Co pół sekundy, prędkość przewijania wzrośnie o 5, aż do maksymalnej wartości. Musi być większa niż "Początkowa prędkość przewijania".')
-        validator = QRegExpValidator(QRegExp('[1-9][0-9]{1,2}'), self.max_scroll_speed_input)
-        self.max_scroll_speed_input.setPlaceholderText(str(self.settings.max_scroll_speed))
-        self.max_scroll_speed_input.setText(str(self.settings.max_scroll_speed))
-        self.max_scroll_speed_input.setValidator(validator)
-
+        self.max_scroll_speed_input = WidgetUtil.create_qline_edit_settings(self.custom_font, self.__validate_values,
+                                                                            'Co pół sekundy, prędkość przewijania wzrośnie o 5, aż do maksymalnej wartości. Musi być większa niż "Początkowa prędkość przewijania".',
+                                                                            QRegExp('[1-9][0-9]{1,2}'),
+                                                                            self.settings.max_scroll_speed)
         self.__create_row('max_scroll_speed', 'Maksymalna prędkość przewijania (5-100):', self.max_scroll_speed_input)
 
     def __create_append_settings(self):

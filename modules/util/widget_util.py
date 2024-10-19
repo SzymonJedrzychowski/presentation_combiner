@@ -1,7 +1,7 @@
 from PIL import Image, ImageDraw, ImageFont
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont, QIcon
-from PyQt5.QtWidgets import QToolTip, QPushButton, QDialog, QHBoxLayout, QAction
+from PyQt5.QtCore import Qt, QRegExp
+from PyQt5.QtGui import QFont, QIcon, QRegExpValidator
+from PyQt5.QtWidgets import QToolTip, QPushButton, QDialog, QHBoxLayout, QAction, QLineEdit
 
 from modules.other.global_variables import GlobalVariables
 from modules.widget.slide_image import SlideImage
@@ -56,3 +56,16 @@ class WidgetUtil:
         draw.text((100, 100), text, (0, 0, 0), font=font)
 
         image.save(path)
+
+    @staticmethod
+    def create_qline_edit_settings(font: QFont, text_edited, tooltip: str, regexp: QRegExp, value: int) -> QLineEdit:
+        qline_edit = QLineEdit()
+        qline_edit.setAlignment(Qt.AlignRight)
+        qline_edit.setFont(font)
+        qline_edit.textEdited.connect(text_edited)
+        qline_edit.setToolTip(tooltip)
+        validator = QRegExpValidator(regexp, qline_edit)
+        qline_edit.setPlaceholderText(str(value))
+        qline_edit.setText(str(value))
+        qline_edit.setValidator(validator)
+        return qline_edit
