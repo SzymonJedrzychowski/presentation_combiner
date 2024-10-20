@@ -57,7 +57,7 @@ class SettingsWindow(QDialog):
 
     def __create_buttons(self):
         cancel_button = WidgetUtil.create_button('Odrzuć', self.custom_font, self.close)
-        self.save_button = WidgetUtil.create_button('Zapisz', self.custom_font, self.__save)
+        self.save_button = WidgetUtil.create_button('Zapisz', self.custom_font, self.__save, False, 'Ctrl+S')
         self.save_button.setDisabled(not self.settings.validate_values(self.inputs))
 
         index_to_append = len(self.inputs)
