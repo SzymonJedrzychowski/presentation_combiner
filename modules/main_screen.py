@@ -232,37 +232,37 @@ class MainScreen(QMainWindow):
 
         # https://www.flaticon.com/free-icons/down-arrow - Down arrow icons created by reussy - Flaticon
         self.save_action = WidgetUtil.create_action(GlobalVariables.DOWNLOAD_ICON,
-                                                    self.__save_file, 'Pobierz pdf', True)
+                                                    self.__save_file, 'Pobierz pdf (Ctrl+S)', True, 'Ctrl+S')
 
         # https://www.flaticon.com/free-icons/close - Close icons created by reussy - Flaticon
         self.reset_action = WidgetUtil.create_action(GlobalVariables.RESET_ICON,
                                                      self.__reset_slides,
-                                                     'Usuń wszystkie slajdy', True)
+                                                     'Usuń wszystkie slajdy (Ctrl+N)', True, 'Ctrl+N')
 
         # https://www.flaticon.com/free-icons/add - Add icons created by reussy - Flaticon
         self.add_action = WidgetUtil.create_action(GlobalVariables.ADD_ICON,
                                                    self.__load_files,
-                                                   'Dodaj slajdy')
+                                                   'Dodaj slajdy (Ctrl+1)', False, 'Ctrl+1')
 
         # https://www.flaticon.com/free-icons/less - Less icons created by reussy - Flaticon
         self.remove_action = WidgetUtil.create_action(GlobalVariables.REMOVE_ICON,
                                                       self.__remove_current_slide,
-                                                      'Usuń obecny slajd', True)
+                                                      'Usuń obecny slajd (Ctrl+2)', True, 'Ctrl+2')
 
         # https://www.flaticon.com/free-icons/mobile-phone - Mobile phone icons created by Freepik - Flaticon
         self.rotate_action = WidgetUtil.create_action(GlobalVariables.ROTATE_ICON,
                                                       self.__rotate_image,
-                                                      'Obróc', True)
+                                                      'Obróc (Ctrl+R)', True, 'Ctrl+R')
 
         # https://www.flaticon.com/free-icons/left - Mobile phone icons created by Freepik - Flaticon
         self.undo_action = WidgetUtil.create_action(GlobalVariables.UNDO_ICON,
                                                     self.__undo,
-                                                    'Cofnij', True)
+                                                    'Cofnij (Ctrl+Z)', True, 'Ctrl+Z')
 
         # https://www.flaticon.com/free-icons/right - Mobile phone icons created by Freepik - Flaticon
         self.redo_action = WidgetUtil.create_action(GlobalVariables.REDO_ICON,
                                                     self.__redo,
-                                                    'Wykonaj ponownie', True)
+                                                    'Wykonaj ponownie (Ctrl+X)', True, 'Ctrl+X')
 
         tool_bar.addAction(self.settings_action)
         tool_bar.addSeparator()

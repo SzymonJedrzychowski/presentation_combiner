@@ -1,6 +1,6 @@
 from PIL import Image, ImageDraw, ImageFont
 from PyQt5.QtCore import Qt, QRegExp
-from PyQt5.QtGui import QFont, QIcon, QRegExpValidator
+from PyQt5.QtGui import QFont, QIcon, QRegExpValidator, QKeySequence
 from PyQt5.QtWidgets import QToolTip, QPushButton, QDialog, QHBoxLayout, QAction, QLineEdit
 
 from modules.other.global_variables import GlobalVariables
@@ -17,7 +17,7 @@ class WidgetUtil:
         QToolTip.setFont(dialog.custom_font)
 
     @staticmethod
-    def create_button(text: str, font: QFont, func, disabled: bool = False) -> QPushButton:
+    def create_button(text: str, font: QFont, func, disabled: bool = False, shortcut: str = None) -> QPushButton:
         button = QPushButton()
         button.setText(text)
         button.setFont(font)
@@ -25,15 +25,19 @@ class WidgetUtil:
         button.setDisabled(disabled)
         button.setAutoDefault(False)
         button.setDefault(False)
+        if shortcut is not None:
+            button.setShortcut(QKeySequence(shortcut))
         return button
 
     @staticmethod
-    def create_action(path: str, func, tooltip: str, disabled: bool = False) -> QAction:
+    def create_action(path: str, func, tooltip: str, disabled: bool = False, shortcut: str = None) -> QAction:
         action = QAction()
         action.setIcon(QIcon(path))
         action.setToolTip(tooltip)
         action.triggered.connect(func)
         action.setDisabled(disabled)
+        if shortcut is not None:
+            action.setShortcut(QKeySequence(shortcut))
         return action
 
     @staticmethod
