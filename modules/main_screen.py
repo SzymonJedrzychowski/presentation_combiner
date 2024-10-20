@@ -9,6 +9,8 @@ from PyQt5.QtWidgets import QMainWindow, QGridLayout, QWidget, QScrollArea, QVBo
     QFileDialog, QDialog
 
 from modules.other.global_variables import GlobalVariables
+from modules.other.history.history import History
+from modules.other.history.history_point import HistoryPoint
 from modules.util.widget_util import WidgetUtil
 from modules.enum.append_options import AppendOptions
 from modules.widget.popup_progress_bar import PopupProgressBar
@@ -36,6 +38,7 @@ class MainScreen(QMainWindow):
         self.scroll_start_time = 0
         self.settings = Settings()
         self.scroll_speed = self.settings.scroll_speed
+        self.history = History()
 
         self.scroll_timer = self.__create_timer()
 
@@ -172,22 +175,21 @@ class MainScreen(QMainWindow):
                 self.selected_image = slide_index
                 break
 
+        self.history.log_list_state(self.image_list, self.selected_image)
         self.update()
 
-    def __reapply_selection(self, event):
-        newly_selected = event.source()
-
-        if newly_selected.is_selected:
-            return
-
+    def __reapply_selection(self, image_index: int, avoid_previous: bool = False):
+        newly_selected = self.image_box.itemAt(image_index).layout().itemAt(1).widget()
         newly_selected.is_selected = True
         newly_selected.apply_border()
 
-        previous_selected = self.image_box.itemAt(self.selected_image).layout().itemAt(1).widget()
-        previous_selected.is_selected = False
-        previous_selected.apply_border()
+        if not avoid_previous:
+            previous_selected = self.image_box.itemAt(self.selected_image).layout().itemAt(1).widget()
+            previous_selected.is_selected = False
+            previous_selected.apply_border()
+            self.history.log_list_state(self.image_list, image_index)
 
-        self.selected_image = self.image_list.index(newly_selected.image)
+        self.selected_image = image_index
 
         pixmap = QPixmap(newly_selected.image).scaledToWidth(self.max_width)
         self.__update_selected_slide(pixmap)
@@ -252,6 +254,16 @@ class MainScreen(QMainWindow):
                                                       self.__rotate_image,
                                                       'Obróc', True)
 
+        # https://www.flaticon.com/free-icons/left - Mobile phone icons created by Freepik - Flaticon
+        self.undo_action = WidgetUtil.create_action(GlobalVariables.UNDO_ICON,
+                                                    self.__undo,
+                                                    'Cofnij', True)
+
+        # https://www.flaticon.com/free-icons/right - Mobile phone icons created by Freepik - Flaticon
+        self.redo_action = WidgetUtil.create_action(GlobalVariables.REDO_ICON,
+                                                    self.__redo,
+                                                    'Wykonaj ponownie', True)
+
         tool_bar.addAction(self.settings_action)
         tool_bar.addSeparator()
         tool_bar.addAction(self.save_action)
@@ -261,6 +273,9 @@ class MainScreen(QMainWindow):
         tool_bar.addAction(self.remove_action)
         tool_bar.addSeparator()
         tool_bar.addAction(self.rotate_action)
+        tool_bar.addSeparator()
+        tool_bar.addAction(self.undo_action)
+        tool_bar.addAction(self.redo_action)
 
     def __load_files(self):
         file = QFileDialog.getOpenFileName(self, 'Wybierz PDF', filter='PDF (*.pdf)')[0]
@@ -320,6 +335,11 @@ class MainScreen(QMainWindow):
             return
 
         self.__update_slide_list(popup_window.selected_images)
+        if self.selected_image is None:
+            self.__reapply_selection(0, True)
+        self.history.log_list_state(self.image_list, self.selected_image)
+        self.redo_action.setDisabled(True)
+        self.undo_action.setDisabled(False)
 
     def __update_slide_list(self, new_images: list[str]):
         if self.settings.append == AppendOptions.AT_END:
@@ -340,15 +360,6 @@ class MainScreen(QMainWindow):
 
         for image_index in range(insert_place, insert_place + len(new_images_list)):
             slide = self.__create_slide(image_index)
-            if self.selected_image is None:
-                self.selected_image = 0
-                slide.itemAt(1).widget().is_selected = True
-                slide.itemAt(1).widget().apply_border()
-
-                selected_image = QPixmap(self.image_list[0])
-                pixmap = selected_image.scaledToWidth(self.max_width)
-
-                self.__update_selected_slide(pixmap)
             self.image_box.insertLayout(image_index, slide)
 
         if self.settings.append == AppendOptions.BEFORE_CURRENT and self.selected_image >= insert_place and self.image_list != new_images_list:
@@ -371,9 +382,6 @@ class MainScreen(QMainWindow):
             layout.takeAt(0).widget().deleteLater()
             layout.takeAt(0).widget().deleteLater()
             self.image_box.takeAt(self.selected_image)
-
-            if path.exists(self.image_list[self.selected_image]):
-                remove(self.image_list[self.selected_image])
 
             self.image_list.pop(self.selected_image)
 
@@ -405,15 +413,15 @@ class MainScreen(QMainWindow):
             self.rotate_action.setDisabled(True)
 
         self.update()
+        self.history.log_list_state(self.image_list, self.selected_image)
+        self.redo_action.setDisabled(True)
+        self.undo_action.setDisabled(False)
 
     def __reset_slides(self):
         self.selected_image = None
 
         pixmap = self.default_image.scaledToWidth(self.max_width)
         self.__update_selected_slide(pixmap)
-
-        for image_file in listdir(GlobalVariables.TEMP):
-            remove(path.join(GlobalVariables.TEMP, image_file))
 
         for image_index in reversed(range(self.image_box.count())):
             layout = self.image_box.itemAt(image_index).layout()
@@ -422,10 +430,13 @@ class MainScreen(QMainWindow):
             self.image_box.takeAt(image_index)
             self.image_list.pop(image_index)
 
+        self.history.log_list_state(self.image_list, self.selected_image)
         self.reset_action.setDisabled(True)
         self.remove_action.setDisabled(True)
         self.save_action.setDisabled(True)
         self.rotate_action.setDisabled(True)
+        self.redo_action.setDisabled(True)
+        self.undo_action.setDisabled(False)
 
     def __save_file(self):
         if not self.image_list:
@@ -476,10 +487,16 @@ class MainScreen(QMainWindow):
             remove(path.join(GlobalVariables.TEMP, file))
 
     def __rotate_image(self):
+        self.__rotate(-90)
+        self.history.log_rotate(self.image_list, self.selected_image, self.image_list[self.selected_image])
+        self.redo_action.setDisabled(True)
+        self.undo_action.setDisabled(False)
+
+    def __rotate(self, angle: int):
         image_name = self.image_list[self.selected_image]
         image = Image.open(image_name)
 
-        new_image = image.rotate(-90, expand=True)
+        new_image = image.rotate(angle, expand=True)
         new_image.save(image_name)
 
         pixmap = QPixmap(image_name).scaledToWidth(self.max_width)
@@ -487,6 +504,48 @@ class MainScreen(QMainWindow):
 
         slide_image = self.image_box.itemAt(self.selected_image).layout().itemAt(1).widget()
         slide_image.refresh_image()
+
+    def __undo(self):
+        self.__change_state(True)
+        self.redo_action.setDisabled(False)
+        self.undo_action.setDisabled(not self.history.allow_undo)
+
+    def __redo(self):
+        self.__change_state(False)
+        self.redo_action.setDisabled(not self.history.allow_redo)
+        self.undo_action.setDisabled(False)
+
+    def __change_state(self, undo: bool):
+        history_point = self.history.get_history_point(undo)
+
+        if history_point.rotated_image is not None:
+            self.__rotate(90 if undo else -90)
+            return
+
+        self.__load_state(history_point, undo)
+        new_selected_image = history_point.past_selected_image if undo else history_point.selected_image
+        if self.image_list and new_selected_image is not None:
+            self.__reapply_selection(new_selected_image, True)
+        else:
+            pixmap = self.default_image.scaledToWidth(self.max_width)
+            self.__update_selected_slide(pixmap)
+            self.reset_action.setDisabled(True)
+            self.remove_action.setDisabled(True)
+            self.save_action.setDisabled(True)
+            self.rotate_action.setDisabled(True)
+
+    def __load_state(self, history_point: HistoryPoint, undo: bool):
+        for image_index in reversed(range(self.image_box.count())):
+            layout = self.image_box.itemAt(image_index).layout()
+            layout.takeAt(0).widget().deleteLater()
+            layout.takeAt(0).widget().deleteLater()
+            self.image_box.takeAt(image_index)
+            self.image_list.pop(image_index)
+
+        list_to_read = history_point.past_list_state if undo else history_point.list_state
+
+        slide_list = [file.split('\\')[1] for file in list_to_read]
+        self.__update_slide_list(slide_list)
 
     def dragEnterEvent(self, event):
         self.drag_start_time = time()
@@ -517,10 +576,15 @@ class MainScreen(QMainWindow):
         if time() - self.drag_start_time > 0.1:
             self.__update_list(event)
         else:
-            self.__reapply_selection(event)
+            newly_selected = event.source()
+            if not newly_selected.is_selected:
+                self.__reapply_selection(self.image_list.index(newly_selected.image))
 
         self.scroll_timer.stop()
         self.scroll_direction = 0
+
+        self.redo_action.setDisabled(True)
+        self.undo_action.setDisabled(False)
 
         event.accept()
 

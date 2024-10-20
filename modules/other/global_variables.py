@@ -27,7 +27,9 @@ class GlobalVariables:
     RESET_ICON = path.join(DATA, 'reset.png')
     SETTINGS_ICON = path.join(DATA, 'settings.png')
     ROTATE_ICON = path.join(DATA, 'rotate.png')
-    SETTINGS = path.join(DATA, "settings.json")
+    UNDO_ICON = path.join(DATA, 'undo.png')
+    REDO_ICON = path.join(DATA, 'redo.png')
+    SETTINGS = path.join(DATA, 'settings.json')
     # File extensions
     PDF = '.pdf'
     # Other
