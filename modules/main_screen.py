@@ -527,6 +527,7 @@ class MainScreen(QMainWindow):
         if self.image_list and new_selected_image is not None:
             self.__reapply_selection(new_selected_image, True)
         else:
+            self.selected_image = None
             pixmap = self.default_image.scaledToWidth(self.max_width)
             self.__update_selected_slide(pixmap)
             self.reset_action.setDisabled(True)
